@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Family World Cup Pool 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+@keyframes rainbow{0%{color:#ff4444}14%{color:#ff8c00}28%{color:#ffd700}42%{color:#22c55e}57%{color:#3b82f6}71%{color:#a78bfa}85%{color:#ec4899}100%{color:#ff4444}}
+.rainbow{animation:rainbow 2s linear infinite;font-weight:600;}
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#faf8f4;--surface:#ffffff;--surface2:#f3f1ec;--border:#e8e4dc;--text:#1a1a1a;--muted:#b0a898;--muted2:#7a7060;--radius:10px;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+.app{max-width:420px;margin:0 auto;padding:0 0 80px;}
+h1{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:2px;line-height:1;color:var(--text);}
+h2{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1.5px;color:var(--text);}
+h3{font-size:14px;font-weight:500;color:var(--text);}
+.hero{padding:32px 20px 0;}
+.hero-tag{font-size:10px;font-weight:500;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.band{background:#1a1a1a;padding:10px 20px;display:flex;align-items:center;gap:8px;margin-top:14px;}
+.band-label{font-size:10px;letter-spacing:2px;color:#666;text-transform:uppercase;flex:1;}
+.band-value{font-size:12px;font-weight:500;color:#f5f0e8;letter-spacing:1px;}
+.screen{padding:0 20px;}
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:8px;}
+.card-sm{background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;border:0.5px solid var(--border);}
+.player-btn{width:100%;background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:8px;transition:background 0.15s;text-align:left;}
+.player-btn:hover{background:var(--surface2);}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.dot-lg{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+.name{font-size:15px;font-weight:500;color:var(--text);}
+.sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.pin-wrap{display:flex;gap:10px;margin:16px 0;}
+.pin-wrap input{flex:1;background:var(--surface2);border:0.5px solid var(--border);border-radius:8px;color:var(--text);font-size:24px;text-align:center;letter-spacing:6px;padding:14px;outline:none;}
+.pin-wrap input:focus{border-color:#1a1a1a;}
+.btn{display:block;width:100%;padding:13px;font-size:14px;font-weight:500;border-radius:var(--radius);border:0.5px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;margin-bottom:8px;transition:background 0.15s;}
+.btn:hover{background:#eae6de;}
+.btn.accent{background:#1a1a1a;border-color:#1a1a1a;color:#f5f0e8;font-weight:600;}
+.btn.accent:hover{background:#2d2d2d;}
+.btn.sm{width:auto;display:inline-block;padding:6px 12px;font-size:12px;margin-bottom:0;}
+.btn.warn{border-color:#d97706;color:#d97706;background:transparent;}
+.btn.warn:hover{background:rgba(217,119,6,0.06);}
+.err{font-size:12px;color:#dc2626;margin-top:6px;}
+.ok{font-size:12px;color:#16a34a;margin-top:6px;}
+.back{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;padding:16px 20px 8px;}
+.back:hover{color:var(--text);}
+.tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto;}
+.tab{padding:10px 12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;}
+.tab.on{color:var(--text);border-bottom-color:var(--text);}
+.pts-big{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;color:var(--text);}
+.badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:1px;padding:3px 8px;border-radius:4px;text-transform:uppercase;}
+.badge.open{background:#f0fdf4;color:#15803d;border:0.5px solid #bbf7d0;}
+.badge.locked{background:#fef2f2;color:#dc2626;border:0.5px solid #fecaca;}
+.badge.override{background:#fffbeb;color:#d97706;border:0.5px solid #fde68a;}
+.lb-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);flex-direction:column;align-items:stretch;gap:6px;}
+.lb-row:last-child{border-bottom:none;}
+.lb-rank{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#ccc8be;width:24px;}
+.lb-name{flex:1;font-size:15px;font-weight:500;color:var(--text);}
+.lb-pts{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--text);}
+.grp-label{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.pick-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.pick-pos{font-size:12px;color:var(--muted);width:28px;}
+.pick-row select,.admin-select{background:#fff;border:1px solid #d4cfc4;border-radius:8px;color:var(--text);font-size:13px;padding:8px 10px;outline:none;}
+.pick-row select{flex:1;}
+.match-card{background:var(--surface2);border-radius:var(--radius);padding:12px;margin-bottom:8px;border:0.5px solid var(--border);}
+.teams-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.team{flex:1;font-size:13px;font-weight:500;color:var(--text);}
+.team.right{text-align:right;}
+.vs{font-size:11px;color:var(--muted);}
+.line-chip{font-size:11px;color:#92400e;background:#fffbeb;border:0.5px solid #fde68a;border-radius:4px;text-align:center;margin-bottom:8px;padding:3px 8px;display:inline-block;width:100%;}
+.pick-btns{display:flex;gap:6px;}
+.pick-btns button{flex:1;padding:8px 4px;font-size:12px;font-weight:500;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--muted2);cursor:pointer;transition:all 0.15s;}
+.pick-btns button.sel{background:#1a1a1a;color:#f5f0e8;border-color:#1a1a1a;}
+.notice{background:var(--surface2);border-radius:var(--radius);padding:14px;font-size:13px;color:var(--muted);text-align:center;margin-bottom:12px;border:0.5px solid var(--border);}
+.deadline-chip{font-size:11px;color:var(--muted);margin-top:4px;}
+.deadline-chip.urgent{color:#dc2626;}
+.admin-input{background:#fff;border:1px solid #d4cfc4;border-radius:8px;color:#1a1a1a;font-size:12px;padding:7px 9px;outline:none;width:100%;}
+.admin-row{display:flex;gap:6px;align-items:center;margin-bottom:6px;}
+.admin-row .admin-input{flex:1;}
+.section-title{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:16px 0 10px;}
+.divider{height:1px;background:var(--border);margin:16px 0;}
+.pts-rule{font-size:12px;color:var(--muted2);margin-bottom:4px;}
+.pts-rule span{color:var(--text);font-weight:500;}
+.override-banner{background:#fffbeb;border:0.5px solid #fde68a;border-radius:var(--radius);padding:12px;font-size:13px;color:#92400e;margin-bottom:12px;text-align:center;}
+.wildcard-section{background:#faf5ff;border:0.5px solid #e9d5ff;border-radius:var(--radius);padding:14px;margin-top:8px;}
+.wc-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#7c3aed;margin-bottom:8px;}
+.wc-desc{font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5;}
+.picks-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.pick-cell{background:var(--surface2);border-radius:8px;padding:10px 12px;border:0.5px solid var(--border);}
+.pick-cell-name{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.pick-entry{font-size:12px;color:var(--text);margin-bottom:2px;display:flex;align-items:center;gap:4px;}
+.pick-entry .pos{font-size:10px;color:var(--muted);width:20px;}
+.pick-entry.correct{color:#16a34a;}
+.pick-entry.partial{color:#d97706;}
+.pick-entry.dns{color:#dc2626;font-style:italic;}
+.player-tab-bar{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.player-tab{padding:6px 12px;font-size:12px;font-weight:500;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--muted2);cursor:pointer;transition:all 0.15s;}
+.player-tab.on{color:#1a1a1a;border-color:transparent;}
+.loading{display:flex;align-items:center;justify-content:center;min-height:100vh;font-size:14px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="app" id="app"><div class="loading">Loading…</div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC8o_677NbH2R_jt1wY7UNEK2rRsY40pyw",
+  authDomain: "worldcup-pool-2026-92f74.firebaseapp.com",
+  databaseURL: "https://worldcup-pool-2026-92f74-default-rtdb.firebaseio.com",
+  projectId: "worldcup-pool-2026-92f74",
+  storageBucket: "worldcup-pool-2026-92f74.firebasestorage.app",
+  messagingSenderId: "1012762606899",
+  appId: "1:1012762606899:web:faab98143d059341bc5246"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
+
+const PLAYERS = [
+  { name:"Rob",      pin:"970165", accent:"#4a9eff", initials:"RB" },
+  { name:"Charisse", pin:"387567", accent:"#4adb8a", initials:"CH" },
+  { name:"Emeline",  pin:"542125", accent:"#ff6eb4", initials:"EM" },
+  { name:"Henry",    pin:"852653", accent:"#ffb84a", initials:"HE" },
+  { name:"Ridley",   pin:"460920", accent:"#a78bfa", initials:"RI" },
+];
+const ADMIN_PIN = "0000";
+const GROUP_DEADLINE = new Date("2026-06-11T06:59:00Z");
+const GROUPS = [
+  {name:"A",teams:["Mexico","South Africa","South Korea","Czechia"]},
+  {name:"B",teams:["Canada","Bosnia-Herzegovina","Qatar","Switzerland"]},
+  {name:"C",teams:["Brazil","Morocco","Haiti","Scotland"]},
+  {name:"D",teams:["USA","Paraguay","Australia","Türkiye"]},
+  {name:"E",teams:["Germany","Curaçao","Ivory Coast","Ecuador"]},
+  {name:"F",teams:["Netherlands","Japan","Sweden","Tunisia"]},
+  {name:"G",teams:["Belgium","Egypt","Iran","New Zealand"]},
+  {name:"H",teams:["Spain","Cape Verde","Saudi Arabia","Uruguay"]},
+  {name:"I",teams:["France","Senegal","Iraq","Norway"]},
+  {name:"J",teams:["Argentina","Algeria","Austria","Jordan"]},
+  {name:"K",teams:["Portugal","Congo DR","Uzbekistan","Colombia"]},
+  {name:"L",teams:["England","Croatia","Ghana","Panama"]},
+];
+const ROUND_NAMES = {r32:"Round of 32",r16:"Round of 16",qf:"Quarterfinals",sf:"Semifinals",final:"Final"};
+const ROUND_KEYS = ["r32","r16","qf","sf","final"];
+const WILDCARD_ROUNDS = ["r32","r16","qf"];
+const POINT_RULES = {r32:{correct:3,wildcard:6},r16:{correct:5,wildcard:10},qf:{correct:8,wildcard:16},sf:{correct:12},final:{correct:18}};
+
+const DEFAULT_STATE = {
+  groupStageOpen:true, overrides:{},
+  knockoutRounds:{r32:false,r16:false,qf:false,sf:false,final:false},
+  knockoutDeadlines:{}, knockoutMatches:{}, knockoutLines:{},
+  results:{groups:{},knockout:{}},
+  picks:Object.fromEntries(PLAYERS.map(p=>[p.name,{groups:{},knockout:{}}]))
+};
+
+let state = null;
+let currentPlayer = null;
+let isAdmin = false;
+let view = "login";
+let tab = "picks";
+let adminTab = "results";
+let groupPicksDraft = {};
+let koDraft = {};
+let koWildcard = "";
+let koRound = null;
+
+function isGroupOpen(s){return s.groupStageOpen && new Date()<GROUP_DEADLINE;}
+function isKnockoutOpen(s,rnd){if(!s.knockoutRounds[rnd])return false;const dl=s.knockoutDeadlines[rnd];return !dl||new Date()<new Date(dl);}
+function groupDeadlinePassed(){return new Date()>=GROUP_DEADLINE;}
+function knockoutDeadlinePassed(s,rnd){if(!s.knockoutRounds[rnd])return false;const dl=s.knockoutDeadlines[rnd];return dl?new Date()>=new Date(dl):false;}
+
+function calcScore(name,s){
+  let sc=0; const picks=s.picks[name]||{};
+  GROUPS.forEach(g=>{
+    const res=s.results.groups[g.name],pick=(picks.groups||{})[g.name];
+    if(!res||!pick)return;
+    if(pick.first&&(pick.first===res.first||pick.first===res.second))sc+=1;
+    if(pick.first&&pick.first===res.first)sc+=1;
+    if(pick.second&&(pick.second===res.first||pick.second===res.second))sc+=1;
+    if(pick.second&&pick.second===res.second)sc+=1;
+  });
+  ROUND_KEYS.forEach(rnd=>{
+    const rr=s.results.knockout[rnd]||{},rp=(picks.knockout||{})[rnd]||{};
+    Object.keys(rr).forEach(mid=>{
+      const winner=rr[mid],pick=rp[mid];
+      if(!pick||!winner||pick.team!==winner)return;
+      const pts=POINT_RULES[rnd];
+      sc+=pick.isWildcard?(pts.wildcard||pts.correct):pts.correct;
+    });
+  });
+  return sc;
+}
+
+function calcBreakdown(name,s){
+  const bd={group:0,r32:0,r16:0,qf:0,sf:0,final:0}; const picks=s.picks[name]||{};
+  GROUPS.forEach(g=>{
+    const res=s.results.groups[g.name],pick=(picks.groups||{})[g.name];
+    if(!res||!pick)return;
+    if(pick.first&&(pick.first===res.first||pick.first===res.second))bd.group+=1;
+    if(pick.first&&pick.first===res.first)bd.group+=1;
+    if(pick.second&&(pick.second===res.first||pick.second===res.second))bd.group+=1;
+    if(pick.second&&pick.second===res.second)bd.group+=1;
+  });
+  ROUND_KEYS.forEach(rnd=>{
+    const rr=s.results.knockout[rnd]||{},rp=(picks.knockout||{})[rnd]||{};
+    Object.keys(rr).forEach(mid=>{
+      const winner=rr[mid],pick=rp[mid];
+      if(!pick||!winner||pick.team!==winner)return;
+      const pts=POINT_RULES[rnd];
+      bd[rnd]+=(pick.isWildcard?(pts.wildcard||pts.correct):pts.correct);
+    });
+  });
+  return bd;
+}
+
+function fmt(ds){if(!ds)return"";return new Date(ds).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit",timeZone:"America/Los_Angeles",timeZoneName:"short"});}
+
+function timeLeft(){
+  const diff=GROUP_DEADLINE-new Date();
+  if(diff<=0)return null;
+  const h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000);
+  if(h>48)return"Closes Jun 10, 11:59 PM PT";
+  if(h>0)return`Closes in ${h}h ${m}m`;
+  return`Closes in ${m}m`;
+}
+
+async function saveState(s){
+  state=s;
+  await set(ref(db,"poolState"),JSON.parse(JSON.stringify(s)));
+  render();
+}
+
+function render(){
+  const app=document.getElementById("app");
+  if(!state){app.innerHTML='<div class="loading">Loading…</div>';return;}
+  if(view==="login")app.innerHTML=renderLogin();
+  else if(view==="pin")app.innerHTML=renderPin();
+  else if(view==="dashboard")app.innerHTML=renderDashboard();
+  else if(view==="group-picks")app.innerHTML=renderGroupPicks();
+  else if(view==="ko-picks")app.innerHTML=renderKoPicks();
+  else if(view==="admin")app.innerHTML=renderAdmin();
+  attachHandlers();
+}
+
+function renderLogin(){
+  return`<div class="hero"><div class="hero-tag">2026 FIFA World Cup</div><h1>Family<br/>Pool</h1></div>
+  <div class="band"><div class="band-label">Select your name</div><div class="band-value">to enter</div></div>
+  <div class="screen" style="padding-top:12px">
+    ${PLAYERS.map(p=>`<button class="player-btn" data-action="select-player" data-name="${p.name}">
+      <div class="dot-lg" style="background:${p.accent}"></div>
+      <div><div class="name">${p.name}</div><div class="sub">View picks &amp; standings</div></div>
+    </button>`).join("")}
+    <div class="divider"></div>
+    <button class="player-btn" data-action="select-admin">
+      <div style="width:14px;height:14px;border-radius:4px;background:#1a1a1a;flex-shrink:0"></div>
+      <div><div class="name">Admin</div><div class="sub">Henry only</div></div>
+    </button>
+  </div>`;
+}
+
+function renderPin(){
+  const title=isAdmin?"Admin access":`Hey, ${currentPlayer?.name}!`;
+  return`<div class="back" data-action="back-login">← Back</div>
+  <div class="screen" style="padding-top:16px">
+    <h2 style="margin-bottom:4px">${title}</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Enter your 6-digit PIN</p>
+    <div class="pin-wrap"><input type="password" inputmode="numeric" maxlength="6" id="pin-field" autocomplete="off"/></div>
+    <div id="pin-error" class="err" style="display:none"></div>
+    <button class="btn accent" data-action="submit-pin">Enter →</button>
+  </div>`;
+}
+
+function renderDashboard(){
+  const p=currentPlayer, score=calcScore(p.name,state);
+  const dpassed=groupDeadlinePassed();
+  const anyKoPassed=ROUND_KEYS.some(r=>knockoutDeadlinePassed(state,r));
+  const tabs=["picks","leaderboard",...(dpassed||anyKoPassed?["all picks"]:[])]
+  return`<div class="hero">
+    <div class="hero-tag">Welcome back</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="dot-lg" style="background:${p.accent}"></div><h1>${p.name}</h1>
+      </div>
+      <div style="text-align:right"><div class="pts-big">${score}</div><div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase">Points</div></div>
+    </div>
+  </div>
+  <div class="band"><div class="band-label">2026 FIFA World Cup</div><div class="band-value">Family Pool</div></div>
+  <div class="screen" style="padding-top:12px">
+    <div class="tab-bar">${tabs.map(t=>`<div class="tab${tab===t?" on":""}" data-action="set-tab" data-tab="${t}">${t.charAt(0).toUpperCase()+t.slice(1)}</div>`).join("")}</div>
+    <div id="tab-content">${renderTabContent()}</div>
+    <div style="margin-top:16px"><button class="btn" data-action="logout">Sign out</button></div>
+  </div>`;
+}
+
+function renderTabContent(){
+  const p=currentPlayer;
+  if(tab==="picks")return renderPicksTab(p);
+  if(tab==="leaderboard")return renderLeaderboard(p);
+  if(tab==="all picks")return renderAllPicks(p);
+  return"";
+}
+
+function renderPicksTab(p){
+  const groupOpen=isGroupOpen(state);
+  const groupOverride=!!(state.overrides?.[p.name]?.group);
+  let html="";
+  if(groupOpen||groupOverride){
+    const done=Object.keys(state.picks[p.name]?.groups||{}).length;
+    const tl=timeLeft();
+    html+=`<div class="card" style="cursor:pointer" data-action="open-group-picks">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><h3>Group stage</h3><div class="sub" style="margin-top:4px">${done}/12 groups picked</div>
+        ${groupOpen&&tl?`<div class="deadline-chip${(GROUP_DEADLINE-new Date())<7200000?" urgent":""}">${tl}</div>`:""}
+        ${groupOverride&&!groupOpen?`<div class="deadline-chip" style="color:#d97706">Override active — submit now</div>`:""}
+        </div>
+        <span class="badge ${groupOverride&&!groupOpen?"override":"open"}">${groupOverride&&!groupOpen?"Override":"Open"}</span>
+      </div></div>`;
+  } else if(!groupOpen&&!groupOverride&&state.groupStageOpen){
+    html+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><h3>Group stage</h3><div class="sub" style="margin-top:4px">Picks closed</div></div><span class="badge locked">Locked</span></div></div>`;
+  }
+  ROUND_KEYS.filter(r=>state.knockoutRounds[r]).forEach(rnd=>{
+    const open=isKnockoutOpen(state,rnd);
+    const ov=!!(state.overrides?.[p.name]?.[rnd]);
+    const canEdit=open||ov;
+    const dl=state.knockoutDeadlines[rnd];
+    html+=`<div class="card" style="cursor:${canEdit?"pointer":"default"}" ${canEdit?`data-action="open-ko-picks" data-rnd="${rnd}"`:""}>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><h3>${ROUND_NAMES[rnd]}</h3>
+        <div class="sub" style="margin-top:4px">${canEdit?(WILDCARD_ROUNDS.includes(rnd)?"Wildcard required":"Make your picks"):"Picks locked"}</div>
+        ${dl&&open?`<div class="deadline-chip">${fmt(dl)}</div>`:""}
+        ${ov&&!open?`<div class="deadline-chip" style="color:#d97706">Override active</div>`:""}
+        </div>
+        <span class="badge ${ov&&!open?"override":open?"open":"locked"}">${ov&&!open?"Override":open?"Open":"Locked"}</span>
+      </div></div>`;
+  });
+  if(!groupOpen&&!groupOverride&&!ROUND_KEYS.some(r=>state.knockoutRounds[r]&&(isKnockoutOpen(state,r)||state.overrides?.[p.name]?.[r]))){
+    html+=`<div class="notice">No picks open right now — Henry will open the next round soon!</div>`;
+  }
+  return html;
+}
+
+function renderLeaderboard(me){
+  const scores=PLAYERS.map(p=>({...p,score:calcScore(p.name,state)})).sort((a,b)=>b.score-a.score);
+  const activeRnd=ROUND_KEYS.filter(r=>state.knockoutRounds[r]).slice(-1)[0];
+  const dpassed=groupDeadlinePassed();
+  const bandVal=activeRnd?ROUND_NAMES[activeRnd]:(dpassed?"Group stage complete":"Group stage");
+  const rounds=[{key:"group",label:"GRP"},...ROUND_KEYS.filter(r=>state.knockoutRounds[r]).map(r=>({key:r,label:{r32:"R32",r16:"R16",qf:"QF",sf:"SF",final:"FIN"}[r]}))];
+  let html=`<div class="band"><div class="band-label">Current stage</div><div class="band-value">${bandVal}</div></div><div class="card" style="margin-top:8px">`;
+  scores.forEach((p,i)=>{
+    const bd=calcBreakdown(p.name,state);
+    const hasAny=rounds.some(r=>bd[r.key]>0);
+    const medals=["🥇","🥈","🥉"];
+    const isMe=p.name===me.name;
+    html+=`<div class="lb-row">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="lb-rank">${medals[i]||i+1}</div>
+        <div class="dot" style="background:${p.accent}"></div>
+        <div class="lb-name" style="font-weight:${isMe?500:400}">${p.name}</div>
+        <div class="lb-pts">${p.score}</div>
+      </div>
+      ${hasAny?`<div style="display:flex;gap:10px;padding-left:46px;flex-wrap:wrap">${rounds.filter(r=>bd[r.key]>0).map(r=>`<div style="text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:1px;color:#b0a898;text-transform:uppercase;margin-bottom:2px">${r.label}</div><div style="font-size:13px;font-weight:500">${bd[r.key]}</div></div>`).join("")}</div>`:""}
+    </div>`;
+  });
+  return html+"</div>";
+}
+
+function renderAllPicks(me){
+  const selectedName=window._selectedPicksPlayer||PLAYERS[0].name;
+  const p=PLAYERS.find(pl=>pl.name===selectedName);
+  const playerPicks=state.picks[selectedName]||{};
+  const results=state.results;
+  const dpassed=groupDeadlinePassed();
+  let html=`<div class="player-tab-bar">
+    ${PLAYERS.map(pl=>`<button class="player-tab${selectedName===pl.name?" on":""}" style="${selectedName===pl.name?`background:${pl.accent};color:#1a1a1a`:""}" data-action="set-picks-player" data-name="${pl.name}">${pl.name}</button>`).join("")}
+  </div>`;
+  if(dpassed){
+    html+=`<div class="section-title">Group stage</div><div class="picks-grid">`;
+    GROUPS.forEach(g=>{
+      const pick=playerPicks.groups?.[g.name],res=results.groups[g.name];
+      const f1=pick?.first&&res&&pick.first===res.first;
+      const f2=pick?.first&&res&&(pick.first===res.first||pick.first===res.second);
+      const s1=pick?.second&&res&&pick.second===res.second;
+      const s2=pick?.second&&res&&(pick.second===res.first||pick.second===res.second);
+      html+=`<div class="pick-cell"><div class="pick-cell-name" style="color:${p.accent}">Group ${g.name}</div>
+        <div class="pick-entry ${f1?"correct":f2?"partial":""}""><span class="pos">1st</span>${pick?.first||"—"}</div>
+        <div class="pick-entry ${s1?"correct":s2?"partial":""}""><span class="pos">2nd</span>${pick?.second||"—"}</div>
+      </div>`;
+    });
+    html+="</div>";
+  }
+  ROUND_KEYS.filter(r=>state.knockoutRounds[r]&&knockoutDeadlinePassed(state,r)).forEach(rnd=>{
+    const ml=state.knockoutMatches?.[rnd]||[];
+    if(!ml.length)return;
+    const rndPicks=playerPicks.knockout?.[rnd]||{};
+    const rndResults=results.knockout?.[rnd]||{};
+    const wcTeam=rndPicks.wildcard||"";
+    html+=`<div class="section-title">${ROUND_NAMES[rnd]}</div>`;
+    ml.forEach((match,idx)=>{
+      const mid=`m${idx}`,pick=rndPicks[mid],winner=rndResults[mid];
+      const hasRes=!!winner,correct=pick&&winner&&pick.team===winner;
+      const isWc=pick&&wcTeam&&pick.team===wcTeam,dns=hasRes&&!pick;
+      html+=`<div class="card-sm" style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:12px;color:var(--muted)">${match.home} vs ${match.away}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${dns?`<span class="pick-entry dns">Did not submit</span>`:`
+            <span style="font-size:13px;font-weight:500;color:${correct?"#16a34a":"var(--text)"}" class="${isWc?"rainbow":""}">${pick?.team||"—"}</span>
+            ${isWc?`<span style="font-size:11px;color:${correct?"#16a34a":"#7c3aed"}">⭐</span>`:""}`}
+        </div></div>`;
+    });
+    if(wcTeam)html+=`<div style="font-size:12px;color:var(--muted);margin-bottom:8px;padding-left:4px">Wildcard: <span class="rainbow">${wcTeam}</span></div>`;
+  });
+  return html;
+}
+
+function renderGroupPicks(){
+  const existing=state.picks[currentPlayer.name]?.groups||{};
+  let html=`<div class="back" data-action="back-dashboard">← Back</div>
+  <div class="screen">
+    <h2 style="margin-bottom:4px">Group stage picks</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Pick 1st and 2nd for each group. Editable until Jun 10, 11:59 PM PT.</p>
+    <div style="margin-bottom:14px">
+      <div class="pts-rule">Correct qualifier: <span>+1 pt</span></div>
+      <div class="pts-rule">Correct qualifier + position: <span>+2 pts total</span></div>
+    </div>`;
+  const ov=!!(state.overrides?.[currentPlayer.name]?.group);
+  if(ov&&!isGroupOpen(state))html+=`<div class="override-banner">⚡ Admin override — submit now</div>`;
+  GROUPS.forEach(g=>{
+    const cur=groupPicksDraft[g.name]||existing[g.name]||{};
+    html+=`<div class="card"><div class="grp-label">Group ${g.name}</div>
+      <div class="pick-row"><span class="pick-pos">1st</span>
+        <select data-group="${g.name}" data-pos="first">
+          <option value="">— pick team —</option>
+          ${g.teams.map(t=>`<option value="${t}"${cur.first===t?" selected":""}>${t}</option>`).join("")}
+        </select></div>
+      <div class="pick-row"><span class="pick-pos">2nd</span>
+        <select data-group="${g.name}" data-pos="second">
+          <option value="">— pick team —</option>
+          ${g.teams.map(t=>`<option value="${t}"${cur.second===t?" selected":""}>${t}</option>`).join("")}
+        </select></div>
+    </div>`;
+  });
+  html+=`<div id="grp-save-msg" class="ok" style="display:none">✓ Picks saved!</div>
+  <button class="btn accent" style="margin-top:8px" data-action="save-group-picks">Save all picks →</button></div>`;
+  return html;
+}
+
+function renderKoPicks(){
+  const rnd=koRound;
+  const ml=state.knockoutMatches?.[rnd]||[];
+  const ov=!!(state.overrides?.[currentPlayer.name]?.[rnd]);
+  let html=`<div class="back" data-action="back-dashboard">← Back</div>
+  <div class="screen">
+    <h2 style="margin-bottom:4px">${ROUND_NAMES[rnd]}</h2>
+    <div style="margin-bottom:14px">
+      <div class="pts-rule">Correct pick: <span>+${POINT_RULES[rnd].correct} pts</span></div>
+      ${WILDCARD_ROUNDS.includes(rnd)?`<div class="pts-rule">Wildcard correct: <span>+${POINT_RULES[rnd].wildcard} pts</span></div>`:""}
+    </div>
+    ${ov&&!isKnockoutOpen(state,rnd)?`<div class="override-banner">⚡ Admin override — submit now</div>`:""}
+    ${!ml.length?`<div class="notice">Matches haven't been set yet.</div>`:""}`;
+  ml.forEach((match,idx)=>{
+    const mid=`m${idx}`,cur=koDraft[mid]||{};
+    const line=state.knockoutLines?.[rnd]?.[mid];
+    html+=`<div class="match-card">
+      <div class="teams-row"><span class="team">${match.home}</span><span class="vs">vs</span><span class="team right">${match.away}</span></div>
+      ${line?`<div class="line-chip">Line: ${line}</div>`:""}
+      <div class="pick-btns">
+        <button class="${cur.team===match.home?"sel":""}" data-action="ko-pick" data-mid="${mid}" data-team="${match.home}">${match.home}</button>
+        <button class="${cur.team===match.away?"sel":""}" data-action="ko-pick" data-mid="${mid}" data-team="${match.away}">${match.away}</button>
+      </div>
+    </div>`;
+  });
+  if(WILDCARD_ROUNDS.includes(rnd)&&ml.length){
+    const pickedTeams=[...new Set(Object.values(koDraft).map(p=>p.team).filter(Boolean))];
+    html+=`<div class="wildcard-section">
+      <div class="wc-label">⭐ Wildcard pick</div>
+      <div class="wc-desc">Pick 1 team from your selections above that is not favored to win according to the line. If your wildcard wins, you earn double points for that pick.</div>
+      <select id="wc-select" style="width:100%;background:#fff;border:1px solid #e9d5ff;border-radius:8px;color:#1a1a1a;font-size:14px;padding:10px 12px;outline:none">
+        <option value="">— select your wildcard —</option>
+        ${pickedTeams.map(t=>`<option value="${t}"${koWildcard===t?" selected":""}>${t}</option>`).join("")}
+      </select>
+      ${koWildcard?`<div style="font-size:12px;color:#7c3aed;margin-top:6px">⭐ ${koWildcard} is your wildcard</div>`:""}
+    </div>`;
+  }
+  html+=`<div id="ko-save-msg" class="ok" style="display:none;margin-top:8px">✓ Picks saved!</div>`;
+  if(ml.length)html+=`<button class="btn accent" style="margin-top:8px" data-action="save-ko-picks">Save picks →</button>`;
+  html+="</div>";
+  return html;
+}
+
+function renderAdmin(){
+  const tabs=["results","rounds","overrides","picks"];
+  return`<div class="hero" style="padding-bottom:16px">
+    <div class="hero-tag">Admin panel</div><h1>Control<br/>Centre</h1>
+  </div>
+  <div class="screen" style="padding-top:12px">
+    <div class="tab-bar">${tabs.map(t=>`<div class="tab${adminTab===t?" on":""}" data-action="set-admin-tab" data-tab="${t}">${t.charAt(0).toUpperCase()+t.slice(1)}</div>`).join("")}</div>
+    <div id="admin-content">${renderAdminContent()}</div>
+    <div style="margin-top:16px"><button class="btn" data-action="logout">Sign out</button></div>
+  </div>`;
+}
+
+function renderAdminContent(){
+  if(adminTab==="results")return renderAdminResults();
+  if(adminTab==="rounds")return renderAdminRounds();
+  if(adminTab==="overrides")return renderAdminOverrides();
+  if(adminTab==="picks")return renderAdminPicks();
+  return"";
+}
+
+function renderAdminResults(){
+  let html=`<div class="section-title">Group stage results</div>`;
+  GROUPS.forEach(g=>{
+    const res=state.results.groups[g.name]||{};
+    html+=`<div class="card-sm"><div class="grp-label" style="margin-bottom:6px">Group ${g.name}</div>
+      <div class="pick-row"><span class="pick-pos">1st</span>
+        <select class="admin-select" style="flex:1" data-res-group="${g.name}" data-res-pos="first">
+          <option value="">—</option>${g.teams.map(t=>`<option value="${t}"${res.first===t?" selected":""}>${t}</option>`).join("")}
+        </select></div>
+      <div class="pick-row"><span class="pick-pos">2nd</span>
+        <select class="admin-select" style="flex:1" data-res-group="${g.name}" data-res-pos="second">
+          <option value="">—</option>${g.teams.map(t=>`<option value="${t}"${res.second===t?" selected":""}>${t}</option>`).join("")}
+        </select></div>
+    </div>`;
+  });
+  html+=`<button class="btn accent" style="background:#1a1a1a;margin-top:8px;margin-bottom:20px" data-action="save-grp-results">Save group results →</button>`;
+  html+=`<div class="section-title">Knockout results</div>`;
+  ROUND_KEYS.filter(r=>state.knockoutRounds[r]).forEach(rnd=>{
+    const ml=state.knockoutMatches?.[rnd]||[];
+    if(!ml.length)return;
+    html+=`<div style="font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px">${ROUND_NAMES[rnd]}</div>`;
+    ml.forEach((match,idx)=>{
+      const mid=`m${idx}`,winner=(state.results.knockout[rnd]||{})[mid]||"";
+      html+=`<div class="card-sm" style="margin-bottom:6px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${match.home} vs ${match.away}</div>
+        <select class="admin-select" style="width:100%" data-ko-res-rnd="${rnd}" data-ko-res-mid="${mid}">
+          <option value="">— winner —</option>
+          <option value="${match.home}"${winner===match.home?" selected":""}>${match.home}</option>
+          <option value="${match.away}"${winner===match.away?" selected":""}>${match.away}</option>
+        </select></div>`;
+    });
+  });
+  html+=`<button class="btn accent" style="background:#1a1a1a;margin-top:8px" data-action="save-ko-results">Save knockout results →</button>`;
+  return html;
+}
+
+function renderAdminRounds(){
+  const NUM={r32:16,r16:8,qf:4,sf:2,final:1};
+  let html=`<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div><h3>Group stage</h3><div class="sub" style="margin-top:2px">Deadline: Jun 10, 11:59 PM PT (auto)</div></div>
+      <span class="badge ${state.groupStageOpen?"open":"locked"}">${state.groupStageOpen?"Open":"Locked"}</span>
+    </div>
+    <button class="btn sm" style="margin-top:10px" data-action="toggle-group-stage">${state.groupStageOpen?"Force lock":"Reopen"}</button>
+  </div>`;
+  ROUND_KEYS.forEach(rnd=>{
+    const ml=state.knockoutMatches?.[rnd]||[];
+    const dl=state.knockoutDeadlines?.[rnd]||"";
+    const lines=state.knockoutLines?.[rnd]||{};
+    html+=`<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div><h3>${ROUND_NAMES[rnd]}</h3><div class="sub" style="margin-top:2px">${WILDCARD_ROUNDS.includes(rnd)?"Wildcard required":"No wildcard"}</div></div>
+        <span class="badge ${state.knockoutRounds[rnd]?"open":"locked"}">${state.knockoutRounds[rnd]?"Open":"Locked"}</span>
+      </div>
+      <div class="section-title" style="margin-top:0">Deadline</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center">
+        <input type="datetime-local" class="admin-input" style="flex:1" id="dl-${rnd}" value="${dl}"/>
+        <button class="btn sm" data-action="save-deadline" data-rnd="${rnd}">Set</button>
+      </div>
+      <div class="section-title" style="margin-top:0">Matches &amp; lines</div>
+      ${Array.from({length:NUM[rnd]},(_,i)=>`
+        <div style="margin-bottom:8px">
+          <div class="admin-row">
+            <input class="admin-input" placeholder="Team 1" id="home-${rnd}-${i}" value="${ml[i]?.home||""}"/>
+            <span style="font-size:11px;color:var(--muted)">vs</span>
+            <input class="admin-input" placeholder="Team 2" id="away-${rnd}-${i}" value="${ml[i]?.away||""}"/>
+          </div>
+          <input class="admin-input" placeholder="Line (e.g. Even, Mexico -1.5)" id="line-${rnd}-${i}" value="${lines[`m${i}`]||""}" style="background:#fffbeb;border-color:#fde68a;color:#92400e"/>
+        </div>`).join("")}
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <button class="btn sm" data-action="save-matches" data-rnd="${rnd}">Save matches &amp; lines</button>
+        <button class="btn sm" data-action="toggle-round" data-rnd="${rnd}">${state.knockoutRounds[rnd]?"Lock round":"Open round"}</button>
+      </div>
+    </div>`;
+  });
+  return html;
+}
+
+function renderAdminOverrides(){
+  const rounds=["group",...ROUND_KEYS.filter(r=>state.knockoutRounds[r])];
+  let html=`<div class="notice" style="text-align:left">Grant a player a one-time override to submit picks after the deadline. Clears automatically when they save.</div>`;
+  PLAYERS.forEach(p=>{
+    const ov=state.overrides?.[p.name]||{};
+    const locked=rounds.filter(r=>r==="group"?!isGroupOpen(state):!isKnockoutOpen(state,r));
+    html+=`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div class="dot" style="background:${p.accent};width:12px;height:12px"></div>
+        <div class="name">${p.name}</div>
+      </div>
+      ${locked.length===0?`<div style="font-size:12px;color:var(--muted)">All rounds open</div>`:""}
+      ${locked.map(r=>{
+        const label=r==="group"?"Group stage":ROUND_NAMES[r];
+        const has=!!ov[r];
+        return`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div><div style="font-size:13px;font-weight:500">${label}</div>
+          <div style="font-size:11px;color:${has?"#d97706":"var(--muted)"}">${has?"Override active":"Locked"}</div></div>
+          ${has?`<button class="btn sm warn" data-action="revoke-override" data-player="${p.name}" data-round="${r}">Revoke</button>`:`<button class="btn sm" data-action="grant-override" data-player="${p.name}" data-round="${r}">Grant</button>`}
+        </div>`;
+      }).join("")}
+    </div>`;
+  });
+  return html;
+}
+
+function renderAdminPicks(){
+  let html="";
+  PLAYERS.forEach(p=>{
+    html+=`<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="dot" style="background:${p.accent};width:12px;height:12px"></div>
+          <div class="name">${p.name}</div>
+        </div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px">${calcScore(p.name,state)} pts</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">Group picks: ${Object.keys(state.picks[p.name]?.groups||{}).length}/12 groups</div>
+      ${ROUND_KEYS.filter(r=>state.knockoutRounds[r]).map(r=>{
+        const n=Object.keys(state.picks[p.name]?.knockout?.[r]||{}).filter(k=>k!=="wildcard").length;
+        const total=(state.knockoutMatches?.[r]||[]).length;
+        return total>0?`<div style="font-size:12px;color:var(--muted);margin-top:4px">${ROUND_NAMES[r]}: ${n}/${total} picks</div>`:"";
+      }).join("")}
+    </div>`;
+  });
+  return html;
+}
+
+function attachHandlers(){
+  document.querySelectorAll("[data-action]").forEach(el=>{
+    el.onclick=async(e)=>{
+      const action=el.dataset.action;
+      if(action==="select-player"){
+        currentPlayer=PLAYERS.find(p=>p.name===el.dataset.name);
+        isAdmin=false; view="pin"; render();
+        setTimeout(()=>document.getElementById("pin-field")?.focus(),50);
+      }
+      else if(action==="select-admin"){isAdmin=true;currentPlayer=null;view="pin";render();setTimeout(()=>document.getElementById("pin-field")?.focus(),50);}
+      else if(action==="back-login"){view="login";render();}
+      else if(action==="back-dashboard"){view="dashboard";render();}
+      else if(action==="submit-pin"){
+        const val=document.getElementById("pin-field")?.value||"";
+        if(isAdmin){if(val===ADMIN_PIN){view="admin";adminTab="results";render();}else showPinError("Wrong PIN");}
+        else{if(val===currentPlayer.pin){view="dashboard";tab="picks";render();}else showPinError("Wrong PIN");}
+      }
+      else if(action==="logout"){currentPlayer=null;isAdmin=false;view="login";render();}
+      else if(action==="set-tab"){tab=el.dataset.tab;document.getElementById("tab-content").innerHTML=renderTabContent();attachHandlers();}
+      else if(action==="set-admin-tab"){adminTab=el.dataset.tab;document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();}
+      else if(action==="open-group-picks"){view="group-picks";render();}
+      else if(action==="open-ko-picks"){koRound=el.dataset.rnd;const ex=state.picks[currentPlayer.name]?.knockout?.[koRound]||{};koDraft={};Object.keys(ex).forEach(k=>{if(k!=="wildcard")koDraft[k]=ex[k];});koWildcard=ex.wildcard||"";view="ko-picks";render();}
+      else if(action==="ko-pick"){
+        const mid=el.dataset.mid,team=el.dataset.team;
+        koDraft[mid]={team};
+        document.querySelectorAll(`[data-mid="${mid}"]`).forEach(b=>b.classList.remove("sel"));
+        el.classList.add("sel");
+        if(koRound&&WILDCARD_ROUNDS.includes(koRound)){
+          const pts=[...new Set(Object.values(koDraft).map(p=>p.team).filter(Boolean))];
+          const wcs=document.getElementById("wc-select");
+          if(wcs){const cur=wcs.value;wcs.innerHTML=`<option value="">— select your wildcard —</option>${pts.map(t=>`<option value="${t}"${(koWildcard===t||cur===t)?" selected":""}>${t}</option>`).join("")}`;}
+          if(koWildcard&&!pts.includes(koWildcard))koWildcard="";
+        }
+      }
+      else if(action==="save-group-picks"){
+        const picks={};
+        document.querySelectorAll("[data-group][data-pos]").forEach(s=>{const g=s.dataset.group,pos=s.dataset.pos;if(!picks[g])picks[g]={};picks[g][pos]=s.value;});
+        for(const g of GROUPS){const p=picks[g.name]||{};if(!p.first||!p.second){alert(`Please pick both 1st and 2nd for every group.`);return;}if(p.first===p.second){alert(`Group ${g.name}: 1st and 2nd must be different.`);return;}}
+        const ov={...(state.overrides||{})};if(ov[currentPlayer.name])delete ov[currentPlayer.name].group;
+        const ns={...state,overrides:ov,picks:{...state.picks,[currentPlayer.name]:{...state.picks[currentPlayer.name],groups:picks}}};
+        await saveState(ns);
+        const m=document.getElementById("grp-save-msg");if(m){m.style.display="block";setTimeout(()=>m.style.display="none",2000);}
+      }
+      else if(action==="save-ko-picks"){
+        const ml=state.knockoutMatches?.[koRound]||[];
+        if(!ml.length){alert("No matches set yet.");return;}
+        for(let i=0;i<ml.length;i++){if(!koDraft[`m${i}`]?.team){alert("Pick a winner for every match.");return;}}
+        const wcVal=document.getElementById("wc-select")?.value||koWildcard;
+        if(WILDCARD_ROUNDS.includes(koRound)){if(!wcVal){alert("Please select your wildcard pick.");return;}}
+        const ov={...(state.overrides||{})};if(ov[currentPlayer.name])delete ov[currentPlayer.name][koRound];
+        const rd={...koDraft};if(WILDCARD_ROUNDS.includes(koRound))rd.wildcard=wcVal;
+        const newKo={...(state.picks[currentPlayer.name]?.knockout||{}),[koRound]:rd};
+        const ns={...state,overrides:ov,picks:{...state.picks,[currentPlayer.name]:{...state.picks[currentPlayer.name],knockout:newKo}}};
+        await saveState(ns);
+        const m=document.getElementById("ko-save-msg");if(m){m.style.display="block";setTimeout(()=>m.style.display="none",2000);}
+      }
+      else if(action==="save-grp-results"){
+        const groups={...state.results.groups};
+        document.querySelectorAll("[data-res-group]").forEach(s=>{const g=s.dataset.resGroup,pos=s.dataset.resPos;if(!groups[g])groups[g]={};groups[g][pos]=s.value;});
+        await saveState({...state,results:{...state.results,groups}});alert("Group results saved!");
+      }
+      else if(action==="save-ko-results"){
+        const knockout={...state.results.knockout};
+        document.querySelectorAll("[data-ko-res-rnd]").forEach(s=>{const r=s.dataset.koResRnd,mid=s.dataset.koResMid;if(!knockout[r])knockout[r]={};knockout[r][mid]=s.value;});
+        await saveState({...state,results:{...state.results,knockout}});alert("Knockout results saved!");
+      }
+      else if(action==="toggle-group-stage"){await saveState({...state,groupStageOpen:!state.groupStageOpen});document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();}
+      else if(action==="save-deadline"){
+        const rnd=el.dataset.rnd,val=document.getElementById(`dl-${rnd}`)?.value||"";
+        await saveState({...state,knockoutDeadlines:{...state.knockoutDeadlines,[rnd]:val}});
+        alert(`Deadline saved: ${fmt(val)}`);
+      }
+      else if(action==="save-matches"){
+        const rnd=el.dataset.rnd,NUM={r32:16,r16:8,qf:4,sf:2,final:1};
+        const matches=[],lines={};
+        for(let i=0;i<NUM[rnd];i++){
+          const home=document.getElementById(`home-${rnd}-${i}`)?.value.trim()||"";
+          const away=document.getElementById(`away-${rnd}-${i}`)?.value.trim()||"";
+          const line=document.getElementById(`line-${rnd}-${i}`)?.value.trim()||"";
+          if(home&&away){matches.push({home,away});if(line)lines[`m${matches.length-1}`]=line;}
+        }
+        await saveState({...state,knockoutMatches:{...state.knockoutMatches,[rnd]:matches},knockoutLines:{...state.knockoutLines,[rnd]:lines}});
+        alert(`${ROUND_NAMES[rnd]} matches & lines saved!`);
+      }
+      else if(action==="toggle-round"){
+        const rnd=el.dataset.rnd;
+        await saveState({...state,knockoutRounds:{...state.knockoutRounds,[rnd]:!state.knockoutRounds[rnd]}});
+        document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();
+      }
+      else if(action==="grant-override"){
+        const ov={...(state.overrides||{})};if(!ov[el.dataset.player])ov[el.dataset.player]={};ov[el.dataset.player][el.dataset.round]=true;
+        await saveState({...state,overrides:ov});document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();
+      }
+      else if(action==="revoke-override"){
+        const ov={...(state.overrides||{})};if(ov[el.dataset.player])delete ov[el.dataset.player][el.dataset.round];
+        await saveState({...state,overrides:ov});document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();
+      }
+      else if(action==="set-picks-player"){
+        window._selectedPicksPlayer=el.dataset.name;
+        document.getElementById("tab-content").innerHTML=renderTabContent();attachHandlers();
+      }
+    };
+  });
+  const pinField=document.getElementById("pin-field");
+  if(pinField)pinField.onkeydown=e=>{if(e.key==="Enter")document.querySelector("[data-action='submit-pin']")?.click();};
+  const wcSel=document.getElementById("wc-select");
+  if(wcSel)wcSel.onchange=e=>{koWildcard=e.target.value;};
+}
+
+function showPinError(msg){const el=document.getElementById("pin-error");if(el){el.textContent=msg;el.style.display="block";}}
+
+// Load state from Firebase
+const stateRef=ref(db,"poolState");
+onValue(stateRef,snapshot=>{
+  const data=snapshot.val();
+  if(data){
+    // Ensure all players exist in picks
+    if(!data.picks)data.picks={};
+    PLAYERS.forEach(p=>{if(!data.picks[p.name])data.picks[p.name]={groups:{},knockout:{}};});
+    if(!data.results)data.results={groups:{},knockout:{}};
+    if(!data.overrides)data.overrides={};
+    state=data;
+  } else {
+    state=JSON.parse(JSON.stringify(DEFAULT_STATE));
+    set(stateRef,state);
+  }
+  render();
+});
+</script>
+</body>
+</html>
