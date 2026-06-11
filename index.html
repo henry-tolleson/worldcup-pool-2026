@@ -100,11 +100,11 @@ h3{font-size:14px;font-weight:500;color:var(--text);}
 </head>
 <body>
 <div class="app" id="app"><div class="loading">Loading…</div></div>
-
+ 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+ 
 const firebaseConfig = {
   apiKey: "AIzaSyC8o_677NbH2R_jt1wY7UNEK2rRsY40pyw",
   authDomain: "worldcup-pool-2026-92f74.firebaseapp.com",
@@ -114,10 +114,10 @@ const firebaseConfig = {
   messagingSenderId: "1012762606899",
   appId: "1:1012762606899:web:faab98143d059341bc5246"
 };
-
+ 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getDatabase(firebaseApp);
-
+ 
 const PLAYERS = [
   { name:"Rob",      pin:"970165", accent:"#4a9eff", initials:"RB" },
   { name:"Charisse", pin:"387567", accent:"#4adb8a", initials:"CH" },
@@ -145,15 +145,31 @@ const ROUND_NAMES = {r32:"Round of 32",r16:"Round of 16",qf:"Quarterfinals",sf:"
 const ROUND_KEYS = ["r32","r16","qf","sf","final"];
 const WILDCARD_ROUNDS = ["r32","r16","qf"];
 const POINT_RULES = {r32:{correct:3,wildcard:6},r16:{correct:5,wildcard:10},qf:{correct:8,wildcard:16},sf:{correct:12},final:{correct:18}};
-
+ 
+const FLAGS = {
+  "Mexico":"🇲🇽","South Africa":"🇿🇦","South Korea":"🇰🇷","Czechia":"🇨🇿",
+  "Canada":"🇨🇦","Bosnia-Herzegovina":"🇧🇦","Qatar":"🇶🇦","Switzerland":"🇨🇭",
+  "Brazil":"🇧🇷","Morocco":"🇲🇦","Haiti":"🇭🇹","Scotland":"🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+  "USA":"🇺🇸","Paraguay":"🇵🇾","Australia":"🇦🇺","Türkiye":"🇹🇷",
+  "Germany":"🇩🇪","Curaçao":"🇨🇼","Ivory Coast":"🇨🇮","Ecuador":"🇪🇨",
+  "Netherlands":"🇳🇱","Japan":"🇯🇵","Sweden":"🇸🇪","Tunisia":"🇹🇳",
+  "Belgium":"🇧🇪","Egypt":"🇪🇬","Iran":"🇮🇷","New Zealand":"🇳🇿",
+  "Spain":"🇪🇸","Cape Verde":"🇨🇻","Saudi Arabia":"🇸🇦","Uruguay":"🇺🇾",
+  "France":"🇫🇷","Senegal":"🇸🇳","Iraq":"🇮🇶","Norway":"🇳🇴",
+  "Argentina":"🇦🇷","Algeria":"🇩🇿","Austria":"🇦🇹","Jordan":"🇯🇴",
+  "Portugal":"🇵🇹","Congo DR":"🇨🇩","Uzbekistan":"🇺🇿","Colombia":"🇨🇴",
+  "England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Croatia":"🇭🇷","Ghana":"🇬🇭","Panama":"🇵🇦"
+};
+ 
 const DEFAULT_STATE = {
   groupStageOpen:true, overrides:{},
   knockoutRounds:{r32:false,r16:false,qf:false,sf:false,final:false},
   knockoutDeadlines:{}, knockoutMatches:{}, knockoutLines:{},
   results:{groups:{},knockout:{}},
-  picks:Object.fromEntries(PLAYERS.map(p=>[p.name,{groups:{},knockout:{}}]))
+  picks:Object.fromEntries(PLAYERS.map(p=>[p.name,{groups:{},knockout:{}}])),
+  groupStandings:Object.fromEntries(GROUPS.map(g=>[g.name,Object.fromEntries(g.teams.map(t=>[t,0]))]))
 };
-
+ 
 let state = null;
 let currentPlayer = null;
 let isAdmin = false;
@@ -164,12 +180,12 @@ let groupPicksDraft = {};
 let koDraft = {};
 let koWildcard = "";
 let koRound = null;
-
+ 
 function isGroupOpen(s){return s.groupStageOpen && new Date()<GROUP_DEADLINE;}
 function isKnockoutOpen(s,rnd){if(!s.knockoutRounds[rnd])return false;const dl=s.knockoutDeadlines[rnd];return !dl||new Date()<new Date(dl);}
 function groupDeadlinePassed(){return new Date()>=GROUP_DEADLINE;}
 function knockoutDeadlinePassed(s,rnd){if(!s.knockoutRounds[rnd])return false;const dl=s.knockoutDeadlines[rnd];return dl?new Date()>=new Date(dl):false;}
-
+ 
 function calcScore(name,s){
   let sc=0; const picks=s.picks[name]||{};
   GROUPS.forEach(g=>{
@@ -191,7 +207,7 @@ function calcScore(name,s){
   });
   return sc;
 }
-
+ 
 function calcBreakdown(name,s){
   const bd={group:0,r32:0,r16:0,qf:0,sf:0,final:0}; const picks=s.picks[name]||{};
   GROUPS.forEach(g=>{
@@ -213,9 +229,9 @@ function calcBreakdown(name,s){
   });
   return bd;
 }
-
+ 
 function fmt(ds){if(!ds)return"";return new Date(ds).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit",timeZone:"America/Los_Angeles",timeZoneName:"short"});}
-
+ 
 function timeLeft(){
   const diff=GROUP_DEADLINE-new Date();
   if(diff<=0)return null;
@@ -224,13 +240,13 @@ function timeLeft(){
   if(h>0)return`Closes in ${h}h ${m}m`;
   return`Closes in ${m}m`;
 }
-
+ 
 async function saveState(s){
   state=s;
   await set(ref(db,"poolState"),JSON.parse(JSON.stringify(s)));
   render();
 }
-
+ 
 function render(){
   const app=document.getElementById("app");
   if(!state){app.innerHTML='<div class="loading">Loading…</div>';return;}
@@ -242,7 +258,7 @@ function render(){
   else if(view==="admin")app.innerHTML=renderAdmin();
   attachHandlers();
 }
-
+ 
 function renderLogin(){
   return`<div class="hero"><div class="hero-tag">2026 FIFA World Cup</div><h1>Family<br/>Pool</h1></div>
   <div class="band"><div class="band-label">Select your name</div><div class="band-value">to enter</div></div>
@@ -258,7 +274,7 @@ function renderLogin(){
     </button>
   </div>`;
 }
-
+ 
 function renderPin(){
   const title=isAdmin?"Admin access":`Hey, ${currentPlayer?.name}!`;
   return`<div class="back" data-action="back-login">← Back</div>
@@ -270,12 +286,12 @@ function renderPin(){
     <button class="btn accent" data-action="submit-pin">Enter →</button>
   </div>`;
 }
-
+ 
 function renderDashboard(){
   const p=currentPlayer, score=calcScore(p.name,state);
   const dpassed=groupDeadlinePassed();
   const anyKoPassed=ROUND_KEYS.some(r=>knockoutDeadlinePassed(state,r));
-  const tabs=["picks","leaderboard",...(dpassed||anyKoPassed?["all picks"]:[])]
+  const tabs=["picks","leaderboard",...(dpassed||anyKoPassed?["all picks"]:[]),"group standings"]
   return`<div class="hero">
     <div class="hero-tag">Welcome back</div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -292,15 +308,16 @@ function renderDashboard(){
     <div style="margin-top:16px"><button class="btn" data-action="logout">Sign out</button></div>
   </div>`;
 }
-
+ 
 function renderTabContent(){
   const p=currentPlayer;
   if(tab==="picks")return renderPicksTab(p);
   if(tab==="leaderboard")return renderLeaderboard(p);
   if(tab==="all picks")return renderAllPicks(p);
+  if(tab==="group standings")return renderGroupStandings();
   return"";
 }
-
+ 
 function renderPicksTab(p){
   const groupOpen=isGroupOpen(state);
   const groupOverride=!!(state.overrides?.[p.name]?.group);
@@ -339,7 +356,7 @@ function renderPicksTab(p){
   }
   return html;
 }
-
+ 
 function renderLeaderboard(me){
   const scores=PLAYERS.map(p=>({...p,score:calcScore(p.name,state)})).sort((a,b)=>b.score-a.score);
   const activeRnd=ROUND_KEYS.filter(r=>state.knockoutRounds[r]).slice(-1)[0];
@@ -364,7 +381,7 @@ function renderLeaderboard(me){
   });
   return html+"</div>";
 }
-
+ 
 function renderAllPicks(me){
   const selectedName=window._selectedPicksPlayer||PLAYERS[0].name;
   const p=PLAYERS.find(pl=>pl.name===selectedName);
@@ -412,7 +429,32 @@ function renderAllPicks(me){
   });
   return html;
 }
-
+ 
+function renderGroupStandings(){
+  const gs=state.groupStandings||{};
+  let html='<div style="padding-top:4px">';
+  GROUPS.forEach(g=>{
+    const teams=g.teams.slice().sort((a,b)=>((gs[g.name]||{})[b]||0)-((gs[g.name]||{})[a]||0));
+    html+=`<div class="card" style="padding:12px 16px;margin-bottom:8px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;margin-bottom:10px">Group ${g.name}</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding:0 2px">
+        <span>Team</span><span>PTS</span>
+      </div>`;
+    teams.forEach((team,i)=>{
+      const pts=(gs[g.name]||{})[team]||0;
+      const isTop2=i<2;
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 2px;border-top:0.5px solid var(--border)">
+        <div style="font-size:13px;color:${isTop2?"var(--muted2)":"#ccc8be"};width:16px;font-weight:500">${i+1}</div>
+        <div style="flex:1;font-size:14px;font-weight:${isTop2?500:400};color:${isTop2?"var(--text)":"var(--muted2)"}">${team}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${isTop2?"var(--text)":"var(--muted)"}">${pts}</div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  html+='</div>';
+  return html;
+}
+ 
 function renderGroupPicks(){
   const existing=state.picks[currentPlayer.name]?.groups||{};
   let html=`<div class="back" data-action="back-dashboard">← Back</div>
@@ -444,7 +486,7 @@ function renderGroupPicks(){
   <button class="btn accent" style="margin-top:8px" data-action="save-group-picks">Save all picks →</button></div>`;
   return html;
 }
-
+ 
 function renderKoPicks(){
   const rnd=koRound;
   const ml=state.knockoutMatches?.[rnd]||[];
@@ -487,9 +529,9 @@ function renderKoPicks(){
   html+="</div>";
   return html;
 }
-
+ 
 function renderAdmin(){
-  const tabs=["results","rounds","overrides","picks"];
+  const tabs=["results","rounds","overrides","picks","standings"];
   return`<div class="hero" style="padding-bottom:16px">
     <div class="hero-tag">Admin panel</div><h1>Control<br/>Centre</h1>
   </div>
@@ -499,15 +541,16 @@ function renderAdmin(){
     <div style="margin-top:16px"><button class="btn" data-action="logout">Sign out</button></div>
   </div>`;
 }
-
+ 
 function renderAdminContent(){
   if(adminTab==="results")return renderAdminResults();
   if(adminTab==="rounds")return renderAdminRounds();
   if(adminTab==="overrides")return renderAdminOverrides();
   if(adminTab==="picks")return renderAdminPicks();
+  if(adminTab==="standings")return renderAdminStandings();
   return"";
 }
-
+ 
 function renderAdminResults(){
   let html=`<div class="section-title">Group stage results</div>`;
   GROUPS.forEach(g=>{
@@ -543,7 +586,7 @@ function renderAdminResults(){
   html+=`<button class="btn accent" style="background:#1a1a1a;margin-top:8px" data-action="save-ko-results">Save knockout results →</button>`;
   return html;
 }
-
+ 
 function renderAdminRounds(){
   const NUM={r32:16,r16:8,qf:4,sf:2,final:1};
   let html=`<div class="card">
@@ -585,7 +628,7 @@ function renderAdminRounds(){
   });
   return html;
 }
-
+ 
 function renderAdminOverrides(){
   const rounds=["group",...ROUND_KEYS.filter(r=>state.knockoutRounds[r])];
   let html=`<div class="notice" style="text-align:left">Grant a player a one-time override to submit picks after the deadline. Clears automatically when they save.</div>`;
@@ -611,7 +654,7 @@ function renderAdminOverrides(){
   });
   return html;
 }
-
+ 
 function renderAdminPicks(){
   let html="";
   PLAYERS.forEach(p=>{
@@ -633,7 +676,7 @@ function renderAdminPicks(){
   });
   return html;
 }
-
+ 
 function attachHandlers(){
   document.querySelectorAll("[data-action]").forEach(el=>{
     el.onclick=async(e)=>{
@@ -731,6 +774,19 @@ function attachHandlers(){
         const ov={...(state.overrides||{})};if(ov[el.dataset.player])delete ov[el.dataset.player][el.dataset.round];
         await saveState({...state,overrides:ov});document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();
       }
+      else if(action==="adj-pts"){
+        const grp=el.dataset.group,team=decodeURIComponent(el.dataset.team),delta=parseInt(el.dataset.delta);
+        if(!state.groupStandings)state.groupStandings={};
+        if(!state.groupStandings[grp])state.groupStandings[grp]={};
+        const cur=state.groupStandings[grp][team]||0;
+        state.groupStandings[grp][team]=Math.max(0,cur+delta);
+        const el2=document.getElementById(`pts-${grp}-${encodeURIComponent(team)}`);
+        if(el2)el2.textContent=state.groupStandings[grp][team];
+      }
+      else if(action==="save-standings"){
+        await saveState({...state});
+        alert("Standings saved!");
+      }
       else if(action==="set-picks-player"){
         window._selectedPicksPlayer=el.dataset.name;
         document.getElementById("tab-content").innerHTML=renderTabContent();attachHandlers();
@@ -742,9 +798,32 @@ function attachHandlers(){
   const wcSel=document.getElementById("wc-select");
   if(wcSel)wcSel.onchange=e=>{koWildcard=e.target.value;};
 }
-
+ 
 function showPinError(msg){const el=document.getElementById("pin-error");if(el){el.textContent=msg;el.style.display="block";}}
-
+ 
+function renderAdminStandings(){
+  const gs=state.groupStandings||{};
+  let html=`<div class="notice" style="text-align:left">Update points for each team as games are played. Teams are automatically sorted by points.</div>`;
+  GROUPS.forEach(g=>{
+    html+=`<div class="card" style="padding:12px 16px;margin-bottom:8px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;margin-bottom:10px">Group ${g.name}</div>`;
+    g.teams.forEach(team=>{
+      const pts=(gs[g.name]||{})[team]||0;
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-top:0.5px solid var(--border)">
+        <div style="flex:1;font-size:13px;font-weight:500">${team}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="btn sm" data-action="adj-pts" data-group="${g.name}" data-team="${encodeURIComponent(team)}" data-delta="-1" style="padding:4px 10px;font-size:16px;line-height:1">−</button>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;width:28px;text-align:center" id="pts-${g.name}-${encodeURIComponent(team)}">${pts}</div>
+          <button class="btn sm" data-action="adj-pts" data-group="${g.name}" data-team="${encodeURIComponent(team)}" data-delta="1" style="padding:4px 10px;font-size:16px;line-height:1">+</button>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  html+=`<button class="btn accent" style="margin-top:8px" data-action="save-standings">Save standings →</button>`;
+  return html;
+}
+ 
 // Load state from Firebase
 const stateRef=ref(db,"poolState");
 onValue(stateRef,snapshot=>{
@@ -755,6 +834,7 @@ onValue(stateRef,snapshot=>{
     PLAYERS.forEach(p=>{if(!data.picks[p.name])data.picks[p.name]={groups:{},knockout:{}};});
     if(!data.results)data.results={groups:{},knockout:{}};
     if(!data.overrides)data.overrides={};
+    if(!data.groupStandings){data.groupStandings=Object.fromEntries(GROUPS.map(g=>[g.name,Object.fromEntries(g.teams.map(t=>[t,0]))]));}
     state=data;
   } else {
     state=JSON.parse(JSON.stringify(DEFAULT_STATE));
