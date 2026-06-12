@@ -167,7 +167,7 @@ const DEFAULT_STATE = {
   knockoutDeadlines:{}, knockoutMatches:{}, knockoutLines:{},
   results:{groups:{},knockout:{}},
   picks:Object.fromEntries(PLAYERS.map(p=>[p.name,{groups:{},knockout:{}}])),
-  groupStandings:Object.fromEntries(GROUPS.map(g=>[g.name,Object.fromEntries(g.teams.map(t=>[t,0]))]))
+  groupStandings:Object.fromEntries(GROUPS.map(g=>[g.name,Object.fromEntries(g.teams.map(t=>[t,{pts:0,gd:0}]))])),
 };
  
 let state = null;
@@ -434,19 +434,28 @@ function renderGroupStandings(){
   const gs=state.groupStandings||{};
   let html='<div style="padding-top:4px">';
   GROUPS.forEach(g=>{
-    const teams=g.teams.slice().sort((a,b)=>((gs[g.name]||{})[b]||0)-((gs[g.name]||{})[a]||0));
+    const teams=g.teams.slice().sort((a,b)=>{
+      const ga=gs[g.name]?.[a]||{pts:0,gd:0}, gb=gs[g.name]?.[b]||{pts:0,gd:0};
+      if(gb.pts!==ga.pts)return gb.pts-ga.pts;
+      return gb.gd-ga.gd;
+    });
     html+=`<div class="card" style="padding:12px 16px;margin-bottom:8px">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;margin-bottom:10px">Group ${g.name}</div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding:0 2px">
-        <span>Team</span><span>PTS</span>
+      <div style="display:flex;align-items:center;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding:0 2px">
+        <span style="width:20px"></span><span style="flex:1">Team</span>
+        <span style="width:36px;text-align:center">PTS</span>
+        <span style="width:36px;text-align:center">GD</span>
       </div>`;
     teams.forEach((team,i)=>{
-      const pts=(gs[g.name]||{})[team]||0;
+      const d=gs[g.name]?.[team]||{pts:0,gd:0};
       const isTop2=i<2;
-      html+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 2px;border-top:0.5px solid var(--border)">
-        <div style="font-size:13px;color:${isTop2?"var(--muted2)":"#ccc8be"};width:16px;font-weight:500">${i+1}</div>
+      const gdStr=d.gd>0?`+${d.gd}`:d.gd===0?"0":`${d.gd}`;
+      const gdColor=d.gd>0?"#16a34a":d.gd<0?"#dc2626":"var(--muted)";
+      html+=`<div style="display:flex;align-items:center;gap:0;padding:8px 2px;border-top:0.5px solid var(--border)">
+        <div style="font-size:12px;color:${isTop2?"var(--muted2)":"#ccc8be"};width:20px;font-weight:500">${i+1}</div>
         <div style="flex:1;font-size:14px;font-weight:${isTop2?500:400};color:${isTop2?"var(--text)":"var(--muted2)"}">${team}</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${isTop2?"var(--text)":"var(--muted)"}">${pts}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;width:36px;text-align:center;color:${isTop2?"var(--text)":"var(--muted)"}">${d.pts}</div>
+        <div style="font-size:13px;font-weight:500;width:36px;text-align:center;color:${gdColor}">${gdStr}</div>
       </div>`;
     });
     html+='</div>';
@@ -775,13 +784,16 @@ function attachHandlers(){
         await saveState({...state,overrides:ov});document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();
       }
       else if(action==="adj-pts"){
-        const grp=el.dataset.group,team=decodeURIComponent(el.dataset.team),delta=parseInt(el.dataset.delta);
+        const grp=el.dataset.group,team=decodeURIComponent(el.dataset.team),delta=parseInt(el.dataset.delta),field=el.dataset.field||"pts";
         if(!state.groupStandings)state.groupStandings={};
         if(!state.groupStandings[grp])state.groupStandings[grp]={};
-        const cur=state.groupStandings[grp][team]||0;
-        state.groupStandings[grp][team]=Math.max(0,cur+delta);
-        const el2=document.getElementById(`pts-${grp}-${encodeURIComponent(team)}`);
-        if(el2)el2.textContent=state.groupStandings[grp][team];
+        if(!state.groupStandings[grp][team]||typeof state.groupStandings[grp][team]!=="object")state.groupStandings[grp][team]={pts:0,gd:0};
+        const cur=state.groupStandings[grp][team][field]||0;
+        const newVal=field==="pts"?Math.max(0,cur+delta):cur+delta;
+        state.groupStandings[grp][team][field]=newVal;
+        const elId=field==="pts"?`pts-${grp}-${encodeURIComponent(team)}`:`gd-${grp}-${encodeURIComponent(team)}`;
+        const el2=document.getElementById(elId);
+        if(el2)el2.textContent=field==="gd"?(newVal>0?`+${newVal}`:newVal===0?"0":`${newVal}`):newVal;
       }
       else if(action==="save-standings"){
         await saveState({...state});
@@ -803,18 +815,27 @@ function showPinError(msg){const el=document.getElementById("pin-error");if(el){
  
 function renderAdminStandings(){
   const gs=state.groupStandings||{};
-  let html=`<div class="notice" style="text-align:left">Update points for each team as games are played. Teams are automatically sorted by points.</div>`;
+  let html=`<div class="notice" style="text-align:left">Update points and goal difference for each team. Teams sort by points, then GD if tied.</div>`;
   GROUPS.forEach(g=>{
     html+=`<div class="card" style="padding:12px 16px;margin-bottom:8px">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;margin-bottom:10px">Group ${g.name}</div>`;
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;margin-bottom:10px">Group ${g.name}</div>
+      <div style="display:flex;align-items:center;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">
+        <span style="flex:1">Team</span><span style="width:90px;text-align:center">PTS</span><span style="width:90px;text-align:center">GD</span>
+      </div>`;
     g.teams.forEach(team=>{
-      const pts=(gs[g.name]||{})[team]||0;
-      html+=`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-top:0.5px solid var(--border)">
+      const d=gs[g.name]?.[team]||{pts:0,gd:0};
+      const gdStr=d.gd>0?`+${d.gd}`:d.gd===0?"0":`${d.gd}`;
+      html+=`<div style="display:flex;align-items:center;gap:4px;padding:8px 0;border-top:0.5px solid var(--border)">
         <div style="flex:1;font-size:13px;font-weight:500">${team}</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <button class="btn sm" data-action="adj-pts" data-group="${g.name}" data-team="${encodeURIComponent(team)}" data-delta="-1" style="padding:4px 10px;font-size:16px;line-height:1">−</button>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;width:28px;text-align:center" id="pts-${g.name}-${encodeURIComponent(team)}">${pts}</div>
-          <button class="btn sm" data-action="adj-pts" data-group="${g.name}" data-team="${encodeURIComponent(team)}" data-delta="1" style="padding:4px 10px;font-size:16px;line-height:1">+</button>
+        <div style="display:flex;align-items:center;gap:4px;width:90px;justify-content:center">
+          <button class="btn sm" data-action="adj-pts" data-group="${g.name}" data-team="${encodeURIComponent(team)}" data-field="pts" data-delta="-1" style="padding:3px 8px;font-size:14px;line-height:1">−</button>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;width:24px;text-align:center" id="pts-${g.name}-${encodeURIComponent(team)}">${d.pts}</div>
+          <button class="btn sm" data-action="adj-pts" data-group="${g.name}" data-team="${encodeURIComponent(team)}" data-field="pts" data-delta="1" style="padding:3px 8px;font-size:14px;line-height:1">+</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;width:90px;justify-content:center">
+          <button class="btn sm" data-action="adj-pts" data-group="${g.name}" data-team="${encodeURIComponent(team)}" data-field="gd" data-delta="-1" style="padding:3px 8px;font-size:14px;line-height:1">−</button>
+          <div style="font-size:13px;font-weight:500;width:28px;text-align:center" id="gd-${g.name}-${encodeURIComponent(team)}">${gdStr}</div>
+          <button class="btn sm" data-action="adj-pts" data-group="${g.name}" data-team="${encodeURIComponent(team)}" data-field="gd" data-delta="1" style="padding:3px 8px;font-size:14px;line-height:1">+</button>
         </div>
       </div>`;
     });
@@ -834,7 +855,7 @@ onValue(stateRef,snapshot=>{
     PLAYERS.forEach(p=>{if(!data.picks[p.name])data.picks[p.name]={groups:{},knockout:{}};});
     if(!data.results)data.results={groups:{},knockout:{}};
     if(!data.overrides)data.overrides={};
-    if(!data.groupStandings){data.groupStandings=Object.fromEntries(GROUPS.map(g=>[g.name,Object.fromEntries(g.teams.map(t=>[t,0]))]));}
+    if(!data.groupStandings){data.groupStandings=Object.fromEntries(GROUPS.map(g=>[g.name,Object.fromEntries(g.teams.map(t=>[t,{pts:0,gd:0}]))]));}
     state=data;
   } else {
     state=JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -845,3 +866,4 @@ onValue(stateRef,snapshot=>{
 </script>
 </body>
 </html>
+ 
