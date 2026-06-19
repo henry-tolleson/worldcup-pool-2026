@@ -688,6 +688,10 @@ function renderAdminPicks(){
  
 function attachHandlers(){
   document.querySelectorAll("[data-action]").forEach(el=>{
+    const newEl=el.cloneNode(true);
+    el.parentNode.replaceChild(newEl,el);
+  });
+  document.querySelectorAll("[data-action]").forEach(el=>{
     el.onclick=async(e)=>{
       const action=el.dataset.action;
       if(action==="select-player"){
@@ -866,4 +870,3 @@ onValue(stateRef,snapshot=>{
 </script>
 </body>
 </html>
- 
