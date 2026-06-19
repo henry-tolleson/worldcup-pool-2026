@@ -100,11 +100,11 @@ h3{font-size:14px;font-weight:500;color:var(--text);}
 </head>
 <body>
 <div class="app" id="app"><div class="loading">Loading…</div></div>
- 
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
- 
+
 const firebaseConfig = {
   apiKey: "AIzaSyC8o_677NbH2R_jt1wY7UNEK2rRsY40pyw",
   authDomain: "worldcup-pool-2026-92f74.firebaseapp.com",
@@ -114,10 +114,10 @@ const firebaseConfig = {
   messagingSenderId: "1012762606899",
   appId: "1:1012762606899:web:faab98143d059341bc5246"
 };
- 
+
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getDatabase(firebaseApp);
- 
+
 const PLAYERS = [
   { name:"Rob",      pin:"970165", accent:"#4a9eff", initials:"RB" },
   { name:"Charisse", pin:"387567", accent:"#4adb8a", initials:"CH" },
@@ -145,7 +145,7 @@ const ROUND_NAMES = {r32:"Round of 32",r16:"Round of 16",qf:"Quarterfinals",sf:"
 const ROUND_KEYS = ["r32","r16","qf","sf","final"];
 const WILDCARD_ROUNDS = ["r32","r16","qf"];
 const POINT_RULES = {r32:{correct:3,wildcard:6},r16:{correct:5,wildcard:10},qf:{correct:8,wildcard:16},sf:{correct:12},final:{correct:18}};
- 
+
 const FLAGS = {
   "Mexico":"🇲🇽","South Africa":"🇿🇦","South Korea":"🇰🇷","Czechia":"🇨🇿",
   "Canada":"🇨🇦","Bosnia-Herzegovina":"🇧🇦","Qatar":"🇶🇦","Switzerland":"🇨🇭",
@@ -160,7 +160,7 @@ const FLAGS = {
   "Portugal":"🇵🇹","Congo DR":"🇨🇩","Uzbekistan":"🇺🇿","Colombia":"🇨🇴",
   "England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Croatia":"🇭🇷","Ghana":"🇬🇭","Panama":"🇵🇦"
 };
- 
+
 const DEFAULT_STATE = {
   groupStageOpen:true, overrides:{},
   knockoutRounds:{r32:false,r16:false,qf:false,sf:false,final:false},
@@ -169,7 +169,7 @@ const DEFAULT_STATE = {
   picks:Object.fromEntries(PLAYERS.map(p=>[p.name,{groups:{},knockout:{}}])),
   groupStandings:Object.fromEntries(GROUPS.map(g=>[g.name,Object.fromEntries(g.teams.map(t=>[t,{pts:0,gd:0}]))])),
 };
- 
+
 let state = null;
 let currentPlayer = null;
 let isAdmin = false;
@@ -180,12 +180,12 @@ let groupPicksDraft = {};
 let koDraft = {};
 let koWildcard = "";
 let koRound = null;
- 
+
 function isGroupOpen(s){return s.groupStageOpen && new Date()<GROUP_DEADLINE;}
 function isKnockoutOpen(s,rnd){if(!s.knockoutRounds[rnd])return false;const dl=s.knockoutDeadlines[rnd];return !dl||new Date()<new Date(dl);}
 function groupDeadlinePassed(){return new Date()>=GROUP_DEADLINE;}
 function knockoutDeadlinePassed(s,rnd){if(!s.knockoutRounds[rnd])return false;const dl=s.knockoutDeadlines[rnd];return dl?new Date()>=new Date(dl):false;}
- 
+
 function calcScore(name,s){
   let sc=0; const picks=s.picks[name]||{};
   GROUPS.forEach(g=>{
@@ -207,7 +207,7 @@ function calcScore(name,s){
   });
   return sc;
 }
- 
+
 function calcBreakdown(name,s){
   const bd={group:0,r32:0,r16:0,qf:0,sf:0,final:0}; const picks=s.picks[name]||{};
   GROUPS.forEach(g=>{
@@ -229,9 +229,9 @@ function calcBreakdown(name,s){
   });
   return bd;
 }
- 
+
 function fmt(ds){if(!ds)return"";return new Date(ds).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit",timeZone:"America/Los_Angeles",timeZoneName:"short"});}
- 
+
 function timeLeft(){
   const diff=GROUP_DEADLINE-new Date();
   if(diff<=0)return null;
@@ -240,13 +240,13 @@ function timeLeft(){
   if(h>0)return`Closes in ${h}h ${m}m`;
   return`Closes in ${m}m`;
 }
- 
+
 async function saveState(s){
   state=s;
   await set(ref(db,"poolState"),JSON.parse(JSON.stringify(s)));
   render();
 }
- 
+
 function render(){
   const app=document.getElementById("app");
   if(!state){app.innerHTML='<div class="loading">Loading…</div>';return;}
@@ -258,7 +258,7 @@ function render(){
   else if(view==="admin")app.innerHTML=renderAdmin();
   attachHandlers();
 }
- 
+
 function renderLogin(){
   return`<div class="hero"><div class="hero-tag">2026 FIFA World Cup</div><h1>Family<br/>Pool</h1></div>
   <div class="band"><div class="band-label">Select your name</div><div class="band-value">to enter</div></div>
@@ -274,7 +274,7 @@ function renderLogin(){
     </button>
   </div>`;
 }
- 
+
 function renderPin(){
   const title=isAdmin?"Admin access":`Hey, ${currentPlayer?.name}!`;
   return`<div class="back" data-action="back-login">← Back</div>
@@ -286,7 +286,7 @@ function renderPin(){
     <button class="btn accent" data-action="submit-pin">Enter →</button>
   </div>`;
 }
- 
+
 function renderDashboard(){
   const p=currentPlayer, score=calcScore(p.name,state);
   const dpassed=groupDeadlinePassed();
@@ -308,7 +308,7 @@ function renderDashboard(){
     <div style="margin-top:16px"><button class="btn" data-action="logout">Sign out</button></div>
   </div>`;
 }
- 
+
 function renderTabContent(){
   const p=currentPlayer;
   if(tab==="picks")return renderPicksTab(p);
@@ -317,7 +317,7 @@ function renderTabContent(){
   if(tab==="group standings")return renderGroupStandings();
   return"";
 }
- 
+
 function renderPicksTab(p){
   const groupOpen=isGroupOpen(state);
   const groupOverride=!!(state.overrides?.[p.name]?.group);
@@ -356,7 +356,7 @@ function renderPicksTab(p){
   }
   return html;
 }
- 
+
 function renderLeaderboard(me){
   const scores=PLAYERS.map(p=>({...p,score:calcScore(p.name,state)})).sort((a,b)=>b.score-a.score);
   const activeRnd=ROUND_KEYS.filter(r=>state.knockoutRounds[r]).slice(-1)[0];
@@ -381,7 +381,7 @@ function renderLeaderboard(me){
   });
   return html+"</div>";
 }
- 
+
 function renderAllPicks(me){
   const selectedName=window._selectedPicksPlayer||PLAYERS[0].name;
   const p=PLAYERS.find(pl=>pl.name===selectedName);
@@ -429,7 +429,7 @@ function renderAllPicks(me){
   });
   return html;
 }
- 
+
 function renderGroupStandings(){
   const gs=state.groupStandings||{};
   let html='<div style="padding-top:4px">';
@@ -463,7 +463,7 @@ function renderGroupStandings(){
   html+='</div>';
   return html;
 }
- 
+
 function renderGroupPicks(){
   const existing=state.picks[currentPlayer.name]?.groups||{};
   let html=`<div class="back" data-action="back-dashboard">← Back</div>
@@ -495,7 +495,7 @@ function renderGroupPicks(){
   <button class="btn accent" style="margin-top:8px" data-action="save-group-picks">Save all picks →</button></div>`;
   return html;
 }
- 
+
 function renderKoPicks(){
   const rnd=koRound;
   const ml=state.knockoutMatches?.[rnd]||[];
@@ -538,7 +538,7 @@ function renderKoPicks(){
   html+="</div>";
   return html;
 }
- 
+
 function renderAdmin(){
   const tabs=["results","rounds","overrides","picks","standings"];
   return`<div class="hero" style="padding-bottom:16px">
@@ -550,7 +550,7 @@ function renderAdmin(){
     <div style="margin-top:16px"><button class="btn" data-action="logout">Sign out</button></div>
   </div>`;
 }
- 
+
 function renderAdminContent(){
   if(adminTab==="results")return renderAdminResults();
   if(adminTab==="rounds")return renderAdminRounds();
@@ -559,7 +559,7 @@ function renderAdminContent(){
   if(adminTab==="standings")return renderAdminStandings();
   return"";
 }
- 
+
 function renderAdminResults(){
   let html=`<div class="section-title">Group stage results</div>`;
   GROUPS.forEach(g=>{
@@ -595,7 +595,7 @@ function renderAdminResults(){
   html+=`<button class="btn accent" style="background:#1a1a1a;margin-top:8px" data-action="save-ko-results">Save knockout results →</button>`;
   return html;
 }
- 
+
 function renderAdminRounds(){
   const NUM={r32:16,r16:8,qf:4,sf:2,final:1};
   let html=`<div class="card">
@@ -637,7 +637,7 @@ function renderAdminRounds(){
   });
   return html;
 }
- 
+
 function renderAdminOverrides(){
   const rounds=["group",...ROUND_KEYS.filter(r=>state.knockoutRounds[r])];
   let html=`<div class="notice" style="text-align:left">Grant a player a one-time override to submit picks after the deadline. Clears automatically when they save.</div>`;
@@ -663,7 +663,7 @@ function renderAdminOverrides(){
   });
   return html;
 }
- 
+
 function renderAdminPicks(){
   let html="";
   PLAYERS.forEach(p=>{
@@ -685,138 +685,137 @@ function renderAdminPicks(){
   });
   return html;
 }
- 
+
 function attachHandlers(){
-  document.querySelectorAll("[data-action]").forEach(el=>{
-    const newEl=el.cloneNode(true);
-    el.parentNode.replaceChild(newEl,el);
-  });
-  document.querySelectorAll("[data-action]").forEach(el=>{
-    el.onclick=async(e)=>{
-      const action=el.dataset.action;
-      if(action==="select-player"){
-        currentPlayer=PLAYERS.find(p=>p.name===el.dataset.name);
-        isAdmin=false; view="pin"; render();
-        setTimeout(()=>document.getElementById("pin-field")?.focus(),50);
-      }
-      else if(action==="select-admin"){isAdmin=true;currentPlayer=null;view="pin";render();setTimeout(()=>document.getElementById("pin-field")?.focus(),50);}
-      else if(action==="back-login"){view="login";render();}
-      else if(action==="back-dashboard"){view="dashboard";render();}
-      else if(action==="submit-pin"){
-        const val=document.getElementById("pin-field")?.value||"";
-        if(isAdmin){if(val===ADMIN_PIN){view="admin";adminTab="results";render();}else showPinError("Wrong PIN");}
-        else{if(val===currentPlayer.pin){view="dashboard";tab="picks";render();}else showPinError("Wrong PIN");}
-      }
-      else if(action==="logout"){currentPlayer=null;isAdmin=false;view="login";render();}
-      else if(action==="set-tab"){tab=el.dataset.tab;document.getElementById("tab-content").innerHTML=renderTabContent();attachHandlers();}
-      else if(action==="set-admin-tab"){adminTab=el.dataset.tab;document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();}
-      else if(action==="open-group-picks"){view="group-picks";render();}
-      else if(action==="open-ko-picks"){koRound=el.dataset.rnd;const ex=state.picks[currentPlayer.name]?.knockout?.[koRound]||{};koDraft={};Object.keys(ex).forEach(k=>{if(k!=="wildcard")koDraft[k]=ex[k];});koWildcard=ex.wildcard||"";view="ko-picks";render();}
-      else if(action==="ko-pick"){
-        const mid=el.dataset.mid,team=el.dataset.team;
-        koDraft[mid]={team};
-        document.querySelectorAll(`[data-mid="${mid}"]`).forEach(b=>b.classList.remove("sel"));
-        el.classList.add("sel");
-        if(koRound&&WILDCARD_ROUNDS.includes(koRound)){
-          const pts=[...new Set(Object.values(koDraft).map(p=>p.team).filter(Boolean))];
-          const wcs=document.getElementById("wc-select");
-          if(wcs){const cur=wcs.value;wcs.innerHTML=`<option value="">— select your wildcard —</option>${pts.map(t=>`<option value="${t}"${(koWildcard===t||cur===t)?" selected":""}>${t}</option>`).join("")}`;}
-          if(koWildcard&&!pts.includes(koWildcard))koWildcard="";
-        }
-      }
-      else if(action==="save-group-picks"){
-        const picks={};
-        document.querySelectorAll("[data-group][data-pos]").forEach(s=>{const g=s.dataset.group,pos=s.dataset.pos;if(!picks[g])picks[g]={};picks[g][pos]=s.value;});
-        for(const g of GROUPS){const p=picks[g.name]||{};if(!p.first||!p.second){alert(`Please pick both 1st and 2nd for every group.`);return;}if(p.first===p.second){alert(`Group ${g.name}: 1st and 2nd must be different.`);return;}}
-        const ov={...(state.overrides||{})};if(ov[currentPlayer.name])delete ov[currentPlayer.name].group;
-        const ns={...state,overrides:ov,picks:{...state.picks,[currentPlayer.name]:{...state.picks[currentPlayer.name],groups:picks}}};
-        await saveState(ns);
-        const m=document.getElementById("grp-save-msg");if(m){m.style.display="block";setTimeout(()=>m.style.display="none",2000);}
-      }
-      else if(action==="save-ko-picks"){
-        const ml=state.knockoutMatches?.[koRound]||[];
-        if(!ml.length){alert("No matches set yet.");return;}
-        for(let i=0;i<ml.length;i++){if(!koDraft[`m${i}`]?.team){alert("Pick a winner for every match.");return;}}
-        const wcVal=document.getElementById("wc-select")?.value||koWildcard;
-        if(WILDCARD_ROUNDS.includes(koRound)){if(!wcVal){alert("Please select your wildcard pick.");return;}}
-        const ov={...(state.overrides||{})};if(ov[currentPlayer.name])delete ov[currentPlayer.name][koRound];
-        const rd={...koDraft};if(WILDCARD_ROUNDS.includes(koRound))rd.wildcard=wcVal;
-        const newKo={...(state.picks[currentPlayer.name]?.knockout||{}),[koRound]:rd};
-        const ns={...state,overrides:ov,picks:{...state.picks,[currentPlayer.name]:{...state.picks[currentPlayer.name],knockout:newKo}}};
-        await saveState(ns);
-        const m=document.getElementById("ko-save-msg");if(m){m.style.display="block";setTimeout(()=>m.style.display="none",2000);}
-      }
-      else if(action==="save-grp-results"){
-        const groups={...state.results.groups};
-        document.querySelectorAll("[data-res-group]").forEach(s=>{const g=s.dataset.resGroup,pos=s.dataset.resPos;if(!groups[g])groups[g]={};groups[g][pos]=s.value;});
-        await saveState({...state,results:{...state.results,groups}});alert("Group results saved!");
-      }
-      else if(action==="save-ko-results"){
-        const knockout={...state.results.knockout};
-        document.querySelectorAll("[data-ko-res-rnd]").forEach(s=>{const r=s.dataset.koResRnd,mid=s.dataset.koResMid;if(!knockout[r])knockout[r]={};knockout[r][mid]=s.value;});
-        await saveState({...state,results:{...state.results,knockout}});alert("Knockout results saved!");
-      }
-      else if(action==="toggle-group-stage"){await saveState({...state,groupStageOpen:!state.groupStageOpen});document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();}
-      else if(action==="save-deadline"){
-        const rnd=el.dataset.rnd,val=document.getElementById(`dl-${rnd}`)?.value||"";
-        await saveState({...state,knockoutDeadlines:{...state.knockoutDeadlines,[rnd]:val}});
-        alert(`Deadline saved: ${fmt(val)}`);
-      }
-      else if(action==="save-matches"){
-        const rnd=el.dataset.rnd,NUM={r32:16,r16:8,qf:4,sf:2,final:1};
-        const matches=[],lines={};
-        for(let i=0;i<NUM[rnd];i++){
-          const home=document.getElementById(`home-${rnd}-${i}`)?.value.trim()||"";
-          const away=document.getElementById(`away-${rnd}-${i}`)?.value.trim()||"";
-          const line=document.getElementById(`line-${rnd}-${i}`)?.value.trim()||"";
-          if(home&&away){matches.push({home,away});if(line)lines[`m${matches.length-1}`]=line;}
-        }
-        await saveState({...state,knockoutMatches:{...state.knockoutMatches,[rnd]:matches},knockoutLines:{...state.knockoutLines,[rnd]:lines}});
-        alert(`${ROUND_NAMES[rnd]} matches & lines saved!`);
-      }
-      else if(action==="toggle-round"){
-        const rnd=el.dataset.rnd;
-        await saveState({...state,knockoutRounds:{...state.knockoutRounds,[rnd]:!state.knockoutRounds[rnd]}});
-        document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();
-      }
-      else if(action==="grant-override"){
-        const ov={...(state.overrides||{})};if(!ov[el.dataset.player])ov[el.dataset.player]={};ov[el.dataset.player][el.dataset.round]=true;
-        await saveState({...state,overrides:ov});document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();
-      }
-      else if(action==="revoke-override"){
-        const ov={...(state.overrides||{})};if(ov[el.dataset.player])delete ov[el.dataset.player][el.dataset.round];
-        await saveState({...state,overrides:ov});document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();
-      }
-      else if(action==="adj-pts"){
-        const grp=el.dataset.group,team=decodeURIComponent(el.dataset.team),delta=parseInt(el.dataset.delta),field=el.dataset.field||"pts";
-        if(!state.groupStandings)state.groupStandings={};
-        if(!state.groupStandings[grp])state.groupStandings[grp]={};
-        if(!state.groupStandings[grp][team]||typeof state.groupStandings[grp][team]!=="object")state.groupStandings[grp][team]={pts:0,gd:0};
-        const cur=state.groupStandings[grp][team][field]||0;
-        const newVal=field==="pts"?Math.max(0,cur+delta):cur+delta;
-        state.groupStandings[grp][team][field]=newVal;
-        const elId=field==="pts"?`pts-${grp}-${encodeURIComponent(team)}`:`gd-${grp}-${encodeURIComponent(team)}`;
-        const el2=document.getElementById(elId);
-        if(el2)el2.textContent=field==="gd"?(newVal>0?`+${newVal}`:newVal===0?"0":`${newVal}`):newVal;
-      }
-      else if(action==="save-standings"){
-        await saveState({...state});
-        alert("Standings saved!");
-      }
-      else if(action==="set-picks-player"){
-        window._selectedPicksPlayer=el.dataset.name;
-        document.getElementById("tab-content").innerHTML=renderTabContent();attachHandlers();
-      }
-    };
-  });
   const pinField=document.getElementById("pin-field");
-  if(pinField)pinField.onkeydown=e=>{if(e.key==="Enter")document.querySelector("[data-action='submit-pin']")?.click();};
+  if(pinField)pinField.onkeydown=e=>{if(e.key==="Enter")handleAction("submit-pin",{});};
   const wcSel=document.getElementById("wc-select");
   if(wcSel)wcSel.onchange=e=>{koWildcard=e.target.value;};
 }
- 
+
+async function handleAction(action, dataset){
+  if(action==="select-player"){
+    currentPlayer=PLAYERS.find(p=>p.name===dataset.name);
+    isAdmin=false; view="pin"; render();
+    setTimeout(()=>document.getElementById("pin-field")?.focus(),50);
+  }
+  else if(action==="select-admin"){isAdmin=true;currentPlayer=null;view="pin";render();setTimeout(()=>document.getElementById("pin-field")?.focus(),50);}
+  else if(action==="back-login"){view="login";render();}
+  else if(action==="back-dashboard"){view="dashboard";render();}
+  else if(action==="submit-pin"){
+    const val=document.getElementById("pin-field")?.value||"";
+    if(isAdmin){if(val===ADMIN_PIN){view="admin";adminTab="results";render();}else showPinError("Wrong PIN");}
+    else{if(val===currentPlayer.pin){view="dashboard";tab="picks";render();}else showPinError("Wrong PIN");}
+  }
+  else if(action==="logout"){currentPlayer=null;isAdmin=false;view="login";render();}
+  else if(action==="set-tab"){tab=dataset.tab;document.getElementById("tab-content").innerHTML=renderTabContent();attachHandlers();}
+  else if(action==="set-admin-tab"){adminTab=dataset.tab;document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();}
+  else if(action==="open-group-picks"){view="group-picks";render();}
+  else if(action==="open-ko-picks"){
+    koRound=dataset.rnd;
+    const ex=state.picks[currentPlayer.name]?.knockout?.[koRound]||{};
+    koDraft={};Object.keys(ex).forEach(k=>{if(k!=="wildcard")koDraft[k]=ex[k];});
+    koWildcard=ex.wildcard||"";view="ko-picks";render();
+  }
+  else if(action==="ko-pick"){
+    const mid=dataset.mid,team=dataset.team;
+    koDraft[mid]={team};
+    document.querySelectorAll(`[data-mid="${mid}"]`).forEach(b=>b.classList.remove("sel"));
+    document.querySelector(`[data-mid="${mid}"][data-team="${team}"]`)?.classList.add("sel");
+    if(koRound&&WILDCARD_ROUNDS.includes(koRound)){
+      const pts=[...new Set(Object.values(koDraft).map(p=>p.team).filter(Boolean))];
+      const wcs=document.getElementById("wc-select");
+      if(wcs){const cur=wcs.value;wcs.innerHTML=`<option value="">— select your wildcard —</option>${pts.map(t=>`<option value="${t}"${(koWildcard===t||cur===t)?" selected":""}>${t}</option>`).join("")}`;}
+      if(koWildcard&&!pts.includes(koWildcard))koWildcard="";
+    }
+  }
+  else if(action==="save-group-picks"){
+    const picks={};
+    document.querySelectorAll("[data-group][data-pos]").forEach(s=>{const g=s.dataset.group,pos=s.dataset.pos;if(!picks[g])picks[g]={};picks[g][pos]=s.value;});
+    for(const g of GROUPS){const p=picks[g.name]||{};if(!p.first||!p.second){alert(`Please pick both 1st and 2nd for every group.`);return;}if(p.first===p.second){alert(`Group ${g.name}: 1st and 2nd must be different.`);return;}}
+    const ov={...(state.overrides||{})};if(ov[currentPlayer.name])delete ov[currentPlayer.name].group;
+    const ns={...state,overrides:ov,picks:{...state.picks,[currentPlayer.name]:{...state.picks[currentPlayer.name],groups:picks}}};
+    await saveState(ns);
+    const m=document.getElementById("grp-save-msg");if(m){m.style.display="block";setTimeout(()=>m.style.display="none",2000);}
+  }
+  else if(action==="save-ko-picks"){
+    const ml=state.knockoutMatches?.[koRound]||[];
+    if(!ml.length){alert("No matches set yet.");return;}
+    for(let i=0;i<ml.length;i++){if(!koDraft[`m${i}`]?.team){alert("Pick a winner for every match.");return;}}
+    const wcVal=document.getElementById("wc-select")?.value||koWildcard;
+    if(WILDCARD_ROUNDS.includes(koRound)){if(!wcVal){alert("Please select your wildcard pick.");return;}}
+    const ov={...(state.overrides||{})};if(ov[currentPlayer.name])delete ov[currentPlayer.name][koRound];
+    const rd={...koDraft};if(WILDCARD_ROUNDS.includes(koRound))rd.wildcard=wcVal;
+    const newKo={...(state.picks[currentPlayer.name]?.knockout||{}),[koRound]:rd};
+    const ns={...state,overrides:ov,picks:{...state.picks,[currentPlayer.name]:{...state.picks[currentPlayer.name],knockout:newKo}}};
+    await saveState(ns);
+    const m=document.getElementById("ko-save-msg");if(m){m.style.display="block";setTimeout(()=>m.style.display="none",2000);}
+  }
+  else if(action==="save-grp-results"){
+    const groups={...state.results.groups};
+    document.querySelectorAll("[data-res-group]").forEach(s=>{const g=s.dataset.resGroup,pos=s.dataset.resPos;if(!groups[g])groups[g]={};groups[g][pos]=s.value;});
+    await saveState({...state,results:{...state.results,groups}});alert("Group results saved!");
+  }
+  else if(action==="save-ko-results"){
+    const knockout={...state.results.knockout};
+    document.querySelectorAll("[data-ko-res-rnd]").forEach(s=>{const r=s.dataset.koResRnd,mid=s.dataset.koResMid;if(!knockout[r])knockout[r]={};knockout[r][mid]=s.value;});
+    await saveState({...state,results:{...state.results,knockout}});alert("Knockout results saved!");
+  }
+  else if(action==="toggle-group-stage"){await saveState({...state,groupStageOpen:!state.groupStageOpen});document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();}
+  else if(action==="save-deadline"){
+    const rnd=dataset.rnd,val=document.getElementById(`dl-${rnd}`)?.value||"";
+    await saveState({...state,knockoutDeadlines:{...state.knockoutDeadlines,[rnd]:val}});
+    alert(`Deadline saved: ${fmt(val)}`);
+  }
+  else if(action==="save-matches"){
+    const rnd=dataset.rnd,NUM={r32:16,r16:8,qf:4,sf:2,final:1};
+    const matches=[],lines={};
+    for(let i=0;i<NUM[rnd];i++){
+      const home=document.getElementById(`home-${rnd}-${i}`)?.value.trim()||"";
+      const away=document.getElementById(`away-${rnd}-${i}`)?.value.trim()||"";
+      const line=document.getElementById(`line-${rnd}-${i}`)?.value.trim()||"";
+      if(home&&away){matches.push({home,away});if(line)lines[`m${matches.length-1}`]=line;}
+    }
+    await saveState({...state,knockoutMatches:{...state.knockoutMatches,[rnd]:matches},knockoutLines:{...state.knockoutLines,[rnd]:lines}});
+    alert(`${ROUND_NAMES[rnd]} matches & lines saved!`);
+  }
+  else if(action==="toggle-round"){
+    const rnd=dataset.rnd;
+    await saveState({...state,knockoutRounds:{...state.knockoutRounds,[rnd]:!state.knockoutRounds[rnd]}});
+    document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();
+  }
+  else if(action==="grant-override"){
+    const ov={...(state.overrides||{})};if(!ov[dataset.player])ov[dataset.player]={};ov[dataset.player][dataset.round]=true;
+    await saveState({...state,overrides:ov});document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();
+  }
+  else if(action==="revoke-override"){
+    const ov={...(state.overrides||{})};if(ov[dataset.player])delete ov[dataset.player][dataset.round];
+    await saveState({...state,overrides:ov});document.getElementById("admin-content").innerHTML=renderAdminContent();attachHandlers();
+  }
+  else if(action==="adj-pts"){
+    const grp=dataset.group,team=decodeURIComponent(dataset.team),delta=parseInt(dataset.delta),field=dataset.field||"pts";
+    if(!state.groupStandings)state.groupStandings={};
+    if(!state.groupStandings[grp])state.groupStandings[grp]={};
+    if(!state.groupStandings[grp][team]||typeof state.groupStandings[grp][team]!=="object")state.groupStandings[grp][team]={pts:0,gd:0};
+    const cur=state.groupStandings[grp][team][field]||0;
+    const newVal=field==="pts"?Math.max(0,cur+delta):cur+delta;
+    state.groupStandings[grp][team][field]=newVal;
+    const elId=field==="pts"?`pts-${grp}-${encodeURIComponent(team)}`:`gd-${grp}-${encodeURIComponent(team)}`;
+    const el2=document.getElementById(elId);
+    if(el2)el2.textContent=field==="gd"?(newVal>0?`+${newVal}`:newVal===0?"0":`${newVal}`):newVal;
+  }
+  else if(action==="save-standings"){
+    await saveState({...state});
+    alert("Standings saved!");
+  }
+  else if(action==="set-picks-player"){
+    window._selectedPicksPlayer=dataset.name;
+    document.getElementById("tab-content").innerHTML=renderTabContent();attachHandlers();
+  }
+}
+
 function showPinError(msg){const el=document.getElementById("pin-error");if(el){el.textContent=msg;el.style.display="block";}}
- 
+
 function renderAdminStandings(){
   const gs=state.groupStandings||{};
   let html=`<div class="notice" style="text-align:left">Update points and goal difference for each team. Teams sort by points, then GD if tied.</div>`;
@@ -848,7 +847,15 @@ function renderAdminStandings(){
   html+=`<button class="btn accent" style="margin-top:8px" data-action="save-standings">Save standings →</button>`;
   return html;
 }
- 
+
+// Single delegated click handler for entire app
+document.addEventListener("click", async function(e){
+  const el = e.target.closest("[data-action]");
+  if(!el) return;
+  e.preventDefault();
+  await handleAction(el.dataset.action, el.dataset);
+});
+
 // Load state from Firebase
 const stateRef=ref(db,"poolState");
 onValue(stateRef,snapshot=>{
