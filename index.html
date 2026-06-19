@@ -858,10 +858,10 @@ document.addEventListener("click", async function(e){
 
 // Load state from Firebase
 const stateRef=ref(db,"poolState");
+let initialLoad = true;
 onValue(stateRef,snapshot=>{
   const data=snapshot.val();
   if(data){
-    // Ensure all players exist in picks
     if(!data.picks)data.picks={};
     PLAYERS.forEach(p=>{if(!data.picks[p.name])data.picks[p.name]={groups:{},knockout:{}};});
     if(!data.results)data.results={groups:{},knockout:{}};
@@ -872,7 +872,18 @@ onValue(stateRef,snapshot=>{
     state=JSON.parse(JSON.stringify(DEFAULT_STATE));
     set(stateRef,state);
   }
-  render();
+  // Only auto-render on first load; after that, only render when we explicitly call it
+  if(initialLoad){
+    initialLoad=false;
+    render();
+  } else {
+    // Silently update state in background — scores/leaderboard will refresh next time user navigates
+    // But if we're on dashboard, refresh tab content only (not the whole page)
+    if(view==="dashboard"){
+      const tc=document.getElementById("tab-content");
+      if(tc){tc.innerHTML=renderTabContent();attachHandlers();}
+    }
+  }
 });
 </script>
 </body>
