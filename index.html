@@ -1101,11 +1101,11 @@ function renderAdminBracket(){
   });
   html+=`<button class="btn accent" style="margin-bottom:16px" data-action="save-third-slots">Save 3rd place slots →</button>`;
 
-  ["r32","r16","qf","sf","final","third"].forEach(rnd=>{
-    const rndInfo=BRACKET_ROUNDS.find(r=>r.key===rnd);
+  const ADMIN_BRACKET_ROUNDS=[{key:"r32",full:"Round of 32"},{key:"r16",full:"Round of 16"},{key:"qf",full:"Quarterfinals"},{key:"sf",full:"Semifinals"},{key:"final",full:"Final"},{key:"third",full:"3rd Place"}];
+  ADMIN_BRACKET_ROUNDS.forEach(({key:rnd,full})=>{
     const matches=BRACKET_MATCHES[rnd]||[];
     if(!matches.length)return;
-    html+=`<div class="section-title">${rndInfo.full}</div>`;
+    html+=`<div class="section-title">${full}</div>`;
     matches.forEach(match=>{
       const home=resolveTeam(match.home,s)||getSlotLabel(match.home,s);
       const away=resolveTeam(match.away,s)||getSlotLabel(match.away,s);
