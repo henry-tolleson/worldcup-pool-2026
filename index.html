@@ -161,6 +161,62 @@ const FLAGS = {
   "England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Croatia":"🇭🇷","Ghana":"🇬🇭","Panama":"🇵🇦"
 };
 
+
+const BRACKET_MATCHES = {
+  r32: [
+    {id:"m73", label:"M73", home:{type:"group",g:"A",pos:"2nd"}, away:{type:"group",g:"B",pos:"2nd"}},
+    {id:"m74", label:"M74", home:{type:"group",g:"A",pos:"1st"}, away:{type:"third",groups:"A/B/C/D/F"}},
+    {id:"m75", label:"M75", home:{type:"group",g:"F",pos:"1st"}, away:{type:"group",g:"C",pos:"2nd"}},
+    {id:"m76", label:"M76", home:{type:"group",g:"C",pos:"1st"}, away:{type:"group",g:"F",pos:"2nd"}},
+    {id:"m77", label:"M77", home:{type:"group",g:"I",pos:"1st"}, away:{type:"third",groups:"C/D/F/G/H"}},
+    {id:"m78", label:"M78", home:{type:"group",g:"E",pos:"2nd"}, away:{type:"group",g:"I",pos:"2nd"}},
+    {id:"m79", label:"M79", home:{type:"group",g:"A",pos:"1st"}, away:{type:"third",groups:"C/E/F/H/I"}},
+    {id:"m80", label:"M80", home:{type:"group",g:"L",pos:"1st"}, away:{type:"third",groups:"E/H/I/J/K"}},
+    {id:"m81", label:"M81", home:{type:"group",g:"D",pos:"1st"}, away:{type:"third",groups:"B/E/F/I/J"}},
+    {id:"m82", label:"M82", home:{type:"group",g:"G",pos:"1st"}, away:{type:"third",groups:"A/E/H/I/J"}},
+    {id:"m83", label:"M83", home:{type:"group",g:"K",pos:"2nd"}, away:{type:"group",g:"L",pos:"2nd"}},
+    {id:"m84", label:"M84", home:{type:"group",g:"H",pos:"1st"}, away:{type:"group",g:"J",pos:"2nd"}},
+    {id:"m85", label:"M85", home:{type:"group",g:"B",pos:"1st"}, away:{type:"third",groups:"E/F/G/I/J"}},
+    {id:"m86", label:"M86", home:{type:"group",g:"J",pos:"1st"}, away:{type:"group",g:"H",pos:"2nd"}},
+    {id:"m87", label:"M87", home:{type:"group",g:"K",pos:"1st"}, away:{type:"third",groups:"D/E/I/J/L"}},
+    {id:"m88", label:"M88", home:{type:"group",g:"D",pos:"2nd"}, away:{type:"group",g:"G",pos:"2nd"}},
+  ],
+  r16: [
+    {id:"r16m1", label:"R16 M1", home:{type:"winner",rnd:"r32",mid:"m73"}, away:{type:"winner",rnd:"r32",mid:"m74"}},
+    {id:"r16m2", label:"R16 M2", home:{type:"winner",rnd:"r32",mid:"m75"}, away:{type:"winner",rnd:"r32",mid:"m76"}},
+    {id:"r16m3", label:"R16 M3", home:{type:"winner",rnd:"r32",mid:"m77"}, away:{type:"winner",rnd:"r32",mid:"m78"}},
+    {id:"r16m4", label:"R16 M4", home:{type:"winner",rnd:"r32",mid:"m79"}, away:{type:"winner",rnd:"r32",mid:"m80"}},
+    {id:"r16m5", label:"R16 M5", home:{type:"winner",rnd:"r32",mid:"m81"}, away:{type:"winner",rnd:"r32",mid:"m82"}},
+    {id:"r16m6", label:"R16 M6", home:{type:"winner",rnd:"r32",mid:"m83"}, away:{type:"winner",rnd:"r32",mid:"m84"}},
+    {id:"r16m7", label:"R16 M7", home:{type:"winner",rnd:"r32",mid:"m85"}, away:{type:"winner",rnd:"r32",mid:"m86"}},
+    {id:"r16m8", label:"R16 M8", home:{type:"winner",rnd:"r32",mid:"m87"}, away:{type:"winner",rnd:"r32",mid:"m88"}},
+  ],
+  qf: [
+    {id:"qfm1", label:"QF 1", home:{type:"winner",rnd:"r16",mid:"r16m1"}, away:{type:"winner",rnd:"r16",mid:"r16m2"}},
+    {id:"qfm2", label:"QF 2", home:{type:"winner",rnd:"r16",mid:"r16m3"}, away:{type:"winner",rnd:"r16",mid:"r16m4"}},
+    {id:"qfm3", label:"QF 3", home:{type:"winner",rnd:"r16",mid:"r16m5"}, away:{type:"winner",rnd:"r16",mid:"r16m6"}},
+    {id:"qfm4", label:"QF 4", home:{type:"winner",rnd:"r16",mid:"r16m7"}, away:{type:"winner",rnd:"r16",mid:"r16m8"}},
+  ],
+  sf: [
+    {id:"sfm1", label:"SF 1", home:{type:"winner",rnd:"qf",mid:"qfm1"}, away:{type:"winner",rnd:"qf",mid:"qfm2"}},
+    {id:"sfm2", label:"SF 2", home:{type:"winner",rnd:"qf",mid:"qfm3"}, away:{type:"winner",rnd:"qf",mid:"qfm4"}},
+  ],
+  final: [
+    {id:"finalm1", label:"Final", home:{type:"winner",rnd:"sf",mid:"sfm1"}, away:{type:"winner",rnd:"sf",mid:"sfm2"}},
+  ],
+  third: [
+    {id:"thirdm1", label:"3rd Place", home:{type:"loser",rnd:"sf",mid:"sfm1"}, away:{type:"loser",rnd:"sf",mid:"sfm2"}},
+  ]
+};
+
+const BRACKET_ROUNDS = [
+  {key:"r32",label:"R32",full:"Round of 32"},
+  {key:"r16",label:"R16",full:"Round of 16"},
+  {key:"qf",label:"QF",full:"Quarterfinals"},
+  {key:"sf",label:"SF",full:"Semifinals"},
+  {key:"final",label:"Final",full:"Final"},
+  {key:"third",label:"3rd",full:"3rd Place"},
+];
 const DEFAULT_STATE = {
   groupStageOpen:true, overrides:{},
   knockoutRounds:{r32:false,r16:false,qf:false,sf:false,final:false},
@@ -168,6 +224,8 @@ const DEFAULT_STATE = {
   results:{groups:{},knockout:{}},
   picks:Object.fromEntries(PLAYERS.map(p=>[p.name,{groups:{},knockout:{}}])),
   groupStandings:Object.fromEntries(GROUPS.map(g=>[g.name,Object.fromEntries(g.teams.map(t=>[t,{pts:0,gd:0}]))])),
+  bracketResults:{r32:{},r16:{},qf:{},sf:{},final:{},third:{}},
+  thirdPlaceSlots:{},
 };
 
 let state = null;
@@ -303,7 +361,7 @@ function renderDashboard(){
   const p=currentPlayer, score=calcScore(p.name,state);
   const dpassed=groupDeadlinePassed();
   const anyKoPassed=ROUND_KEYS.some(r=>knockoutDeadlinePassed(state,r));
-  const tabs=["picks","leaderboard",...(dpassed||anyKoPassed?["all picks"]:[]),"group standings"]
+  const tabs=["picks","leaderboard","bracket",...(dpassed||anyKoPassed?["all picks"]:[]),"group standings"]
   return`<div class="hero">
     <div class="hero-tag">Welcome back</div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -327,6 +385,7 @@ function renderTabContent(){
   if(tab==="leaderboard")return renderLeaderboard(p);
   if(tab==="all picks")return renderAllPicks(p);
   if(tab==="group standings")return renderGroupStandings();
+  if(tab==="bracket")return renderBracket();
   return"";
 }
 
@@ -476,6 +535,105 @@ function renderGroupStandings(){
   return html;
 }
 
+
+function resolveTeam(slot, s){
+  if(!slot)return null;
+  if(slot.type==="group"){
+    const res=s.results.groups[slot.g];
+    if(!res)return null;
+    return slot.pos==="1st"?res.first:res.second;
+  }
+  if(slot.type==="third"){
+    return s.thirdPlaceSlots?.[slot.groups]||null;
+  }
+  if(slot.type==="winner"){
+    const res=s.bracketResults?.[slot.rnd]?.[slot.mid];
+    return res||null;
+  }
+  if(slot.type==="loser"){
+    const rndMatches=BRACKET_MATCHES[slot.rnd]||[];
+    const match=rndMatches.find(m=>m.id===slot.mid);
+    if(!match)return null;
+    const winner=s.bracketResults?.[slot.rnd]?.[slot.mid];
+    if(!winner)return null;
+    const home=resolveTeam(match.home,s);
+    const away=resolveTeam(match.away,s);
+    return home===winner?away:home;
+  }
+  return null;
+}
+
+function getSlotLabel(slot,s){
+  if(!slot)return"TBD";
+  if(slot.type==="group") return`${slot.pos==="1st"?"1":"2"}${slot.g}`;
+  if(slot.type==="third") return`3rd ${slot.groups}`;
+  if(slot.type==="winner"){
+    const t=resolveTeam(slot,s);
+    if(t)return t;
+    const rndMatches=BRACKET_MATCHES[slot.rnd]||[];
+    const match=rndMatches.find(m=>m.id===slot.mid);
+    return match?`W ${match.label}`:"TBD";
+  }
+  if(slot.type==="loser"){
+    const t=resolveTeam(slot,s);
+    if(t)return t;
+    return"TBD";
+  }
+  return"TBD";
+}
+
+function renderBracket(){
+  const s=state;
+  const ROUND_COLS={r32:16,r16:8,qf:4,sf:2,final:1,third:1};
+  const COL_WIDTH=148;
+  let html=`
+  <div style="position:relative">
+    <div id="bracket-tabs" style="display:flex;gap:0;overflow-x:auto;border-bottom:1px solid #e8e4dc;margin-bottom:0;scrollbar-width:none;">
+      ${BRACKET_ROUNDS.map(r=>`<div class="btab" data-action="bracket-scroll" data-rnd="${r.key}" style="padding:8px 10px;font-size:12px;font-weight:500;color:#b0a898;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap;flex-shrink:0">${r.label}</div>`).join("")}
+    </div>
+    <div id="bracket-outer" style="overflow-x:auto;scrollbar-width:none;padding-bottom:8px;">
+      <div id="bracket-inner" style="display:flex;gap:0;padding:12px 20px 0;min-width:${BRACKET_ROUNDS.length*COL_WIDTH+40}px;">
+  `;
+
+  BRACKET_ROUNDS.forEach((rnd,ri)=>{
+    const matches=BRACKET_MATCHES[rnd.key]||[];
+    const totalSlots=ROUND_COLS[rnd.key];
+    const topPad=ri===0?0:Math.pow(2,ri)*14-14;
+    const gapBetween=ri===0?8:Math.pow(2,ri)*44-20;
+
+    html+=`<div id="bcol-${rnd.key}" style="width:${COL_WIDTH}px;flex-shrink:0;padding-top:${topPad}px">
+      <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898;margin-bottom:8px;padding:0 4px">${rnd.full}</div>
+      <div style="display:flex;flex-direction:column;gap:${gapBetween}px">`;
+
+    matches.forEach(match=>{
+      const home=resolveTeam(match.home,s)||getSlotLabel(match.home,s);
+      const away=resolveTeam(match.away,s)||getSlotLabel(match.away,s);
+      const winner=s.bracketResults?.[rnd.key]?.[match.id]||"";
+      const homeIsReal=resolveTeam(match.home,s);
+      const awayIsReal=resolveTeam(match.away,s);
+      const homeWon=winner&&winner===home;
+      const awayWon=winner&&winner===away;
+
+      html+=`<div style="background:#fff;border:0.5px solid ${rnd.key==="final"?"#1a1a1a":"#e8e4dc"};border-radius:8px;overflow:hidden;min-width:${COL_WIDTH-8}px">
+        <div style="display:flex;align-items:center;padding:6px 8px;border-bottom:0.5px solid #f0ede6;background:${homeWon?"#f0fdf4":"#fff"}">
+          <span style="font-size:11px;font-weight:${homeIsReal?500:400};color:${homeIsReal?(homeWon?"#16a34a":"#1a1a1a"):"#b0a898"};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${home}</span>
+          ${winner?`<span style="font-size:12px;font-weight:600;color:${homeWon?"#16a34a":"#ccc8be"};margin-left:4px">${homeWon?"✓":""}</span>`:""}
+        </div>
+        <div style="display:flex;align-items:center;padding:6px 8px;background:${awayWon?"#f0fdf4":"#fff"}">
+          <span style="font-size:11px;font-weight:${awayIsReal?500:400};color:${awayIsReal?(awayWon?"#16a34a":"#1a1a1a"):"#b0a898"};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${away}</span>
+          ${winner?`<span style="font-size:12px;font-weight:600;color:${awayWon?"#16a34a":"#ccc8be"};margin-left:4px">${awayWon?"✓":""}</span>`:""}
+        </div>
+      </div>`;
+    });
+    html+="</div></div>";
+  });
+
+  html+=`</div></div>
+    <div style="padding:4px 20px 8px;font-size:11px;color:#b0a898">← Swipe to see full bracket</div>
+  </div>`;
+  return html;
+}
+
 function renderGroupPicks(){
   const existing=state.picks[currentPlayer.name]?.groups||{};
   let html=`<div class="back" data-action="back-dashboard">← Back</div>
@@ -552,7 +710,7 @@ function renderKoPicks(){
 }
 
 function renderAdmin(){
-  const tabs=["results","rounds","overrides","picks","standings"];
+  const tabs=["results","rounds","overrides","picks","standings","bracket"];
   return`<div class="hero" style="padding-bottom:16px">
     <div class="hero-tag">Admin panel</div><h1>Control<br/>Centre</h1>
   </div>
@@ -569,6 +727,7 @@ function renderAdminContent(){
   if(adminTab==="overrides")return renderAdminOverrides();
   if(adminTab==="picks")return renderAdminPicks();
   if(adminTab==="standings")return renderAdminStandings();
+  if(adminTab==="bracket")return renderAdminBracket();
   return"";
 }
 
@@ -816,9 +975,41 @@ async function handleAction(action, dataset){
     const el2=document.getElementById(elId);
     if(el2)el2.textContent=field==="gd"?(newVal>0?`+${newVal}`:newVal===0?"0":`${newVal}`):newVal;
   }
+  else if(action==="save-third-slots"){
+    const slots={...(state.thirdPlaceSlots||{})};
+    document.querySelectorAll("[data-third-grp]").forEach(inp=>{
+      const grp=decodeURIComponent(inp.dataset.thirdGrp);
+      slots[grp]=inp.value.trim();
+    });
+    await saveState({...state,thirdPlaceSlots:slots});
+    alert("3rd place slots saved!");
+  }
+  else if(action==="save-bracket-results"){
+    const br=JSON.parse(JSON.stringify(state.bracketResults||{r32:{},r16:{},qf:{},sf:{},final:{},third:{}}));
+    document.querySelectorAll("[data-bracket-rnd]").forEach(s=>{
+      const rnd=s.dataset.bracketRnd,mid=s.dataset.bracketMid;
+      if(!br[rnd])br[rnd]={};
+      br[rnd][mid]=s.value;
+    });
+    await saveState({...state,bracketResults:br});
+    alert("Bracket results saved!");
+  }
   else if(action==="save-standings"){
     await saveState({...state});
     alert("Standings saved!");
+  }
+  else if(action==="bracket-scroll"){
+    const rnd=dataset.rnd;
+    const col=document.getElementById(`bcol-${rnd}`);
+    const outer=document.getElementById("bracket-outer");
+    if(col&&outer){
+      const colLeft=col.offsetLeft-20;
+      outer.scrollTo({left:colLeft,behavior:"smooth"});
+    }
+    document.querySelectorAll(".btab").forEach(t=>{
+      t.style.color=t.dataset.rnd===rnd?"#1a1a1a":"#b0a898";
+      t.style.borderBottomColor=t.dataset.rnd===rnd?"#1a1a1a":"transparent";
+    });
   }
   else if(action==="set-picks-player"){
     window._selectedPicksPlayer=dataset.name;
@@ -860,6 +1051,44 @@ function renderAdminStandings(){
   return html;
 }
 
+function renderAdminBracket(){
+  const s=state;
+  let html=`<div class="notice" style="text-align:left;margin-bottom:12px">Enter bracket results round by round. Group stage auto-fills from results. Enter 3rd place qualifiers manually.</div>`;
+
+  html+=`<div class="section-title">3rd place qualifiers (fill after group stage)</div>`;
+  const thirdGroups=["A/B/C/D/F","C/D/F/G/H","C/E/F/H/I","E/H/I/J/K","B/E/F/I/J","A/E/H/I/J","E/F/G/I/J","D/E/I/J/L"];
+  thirdGroups.forEach(grp=>{
+    const val=s.thirdPlaceSlots?.[grp]||"";
+    html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="font-size:12px;color:#7a7060;width:100px;flex-shrink:0">3rd ${grp}</div>
+      <input class="admin-input" placeholder="Team name" value="${val}" data-third-grp="${encodeURIComponent(grp)}" style="flex:1"/>
+    </div>`;
+  });
+  html+=`<button class="btn accent" style="margin-bottom:16px" data-action="save-third-slots">Save 3rd place slots →</button>`;
+
+  ["r32","r16","qf","sf","final","third"].forEach(rnd=>{
+    const rndInfo=BRACKET_ROUNDS.find(r=>r.key===rnd);
+    const matches=BRACKET_MATCHES[rnd]||[];
+    if(!matches.length)return;
+    html+=`<div class="section-title">${rndInfo.full}</div>`;
+    matches.forEach(match=>{
+      const home=resolveTeam(match.home,s)||getSlotLabel(match.home,s);
+      const away=resolveTeam(match.away,s)||getSlotLabel(match.away,s);
+      const winner=s.bracketResults?.[rnd]?.[match.id]||"";
+      html+=`<div class="card-sm" style="margin-bottom:8px">
+        <div style="font-size:11px;color:#b0a898;margin-bottom:6px">${match.label}: ${home} vs ${away}</div>
+        <select class="admin-select" style="width:100%" data-bracket-rnd="${rnd}" data-bracket-mid="${match.id}">
+          <option value="">— winner —</option>
+          <option value="${home}" ${winner===home?"selected":""}>${home}</option>
+          <option value="${away}" ${winner===away?"selected":""}>${away}</option>
+        </select>
+      </div>`;
+    });
+  });
+  html+=`<button class="btn accent" style="margin-top:8px" data-action="save-bracket-results">Save bracket results →</button>`;
+  return html;
+}
+
 // Single delegated click handler for entire app
 document.addEventListener("click", async function(e){
   const el = e.target.closest("[data-action]");
@@ -878,6 +1107,8 @@ onValue(stateRef,snapshot=>{
     PLAYERS.forEach(p=>{if(!data.picks[p.name])data.picks[p.name]={groups:{},knockout:{}};});
     if(!data.results)data.results={groups:{},knockout:{}};
     if(!data.overrides)data.overrides={};
+    if(!data.bracketResults)data.bracketResults={r32:{},r16:{},qf:{},sf:{},final:{},third:{}};
+    if(!data.thirdPlaceSlots)data.thirdPlaceSlots={};
     if(!data.groupStandings){data.groupStandings=Object.fromEntries(GROUPS.map(g=>[g.name,Object.fromEntries(g.teams.map(t=>[t,{pts:0,gd:0}]))]));}
     state=data;
   } else {
