@@ -627,21 +627,26 @@ function renderBracket(){
 
   RENDER_ROUNDS.forEach((rnd)=>{
     const ri=rnd.ri;
-    // Match card height ~52px. Gap in R32 = 8px. Each R32 slot = 60px.
-    // R16 center should be between match pairs: offset = 30px top, gap = 120px
-    // QF center between R16 pairs: offset = 90px top, gap = 240px
-    // SF: offset = 210px, gap = 480px
-    const MATCH_H=52, R32_GAP=8, SLOT=MATCH_H+R32_GAP;
-    const pairSize=Math.pow(2,ri)*SLOT;
-    const topPad=ri===0?0:(pairSize/2)-(MATCH_H/2);
-    const gapBetween=ri===0?R32_GAP:pairSize-MATCH_H;
+    // Each R32 match card = 52px tall, 8px gap = 60px per slot
+    // R16 match should center between 2 R32 slots = 120px block
+    //   topPad = 60px - 26px = 34px, gap = 120px - 52px = 68px  (so 34 + 52 + 68 + 52 + ... centers correctly)
+    // QF centers between 2 R16 slots = 2 * (52+68) + 52 = 292px block... simplified:
+    // slotSize(ri) = 52 + gap(ri), gap(ri=0)=8, gap(ri=1)=68, gap(ri=2)=188, gap(ri=3)=428
+    // slotSize(ri) = 52 + gap(ri)
+    // gap(ri) = 2*slotSize(ri-1) - 52 = 2*(52+gap(ri-1)) - 52 = 52 + 2*gap(ri-1)
+    // gap: 8, 68, 188, 428
+    const MATCH_H=52;
+    const gaps=[8,68,188,428];
+    const gapBetween=gaps[ri]||8;
+    const topPad=ri===0?0:(gapBetween/2)+(MATCH_H/2)-MATCH_H/2;
 
     if(rnd.key==="final"){
       // Combined final + 3rd place column
       const finalMatches=BRACKET_MATCHES["final"]||[];
       const thirdMatches=BRACKET_MATCHES["third"]||[];
-      const MATCH_H=52,R32_GAP=8,SLOT=MATCH_H+R32_GAP;
-      const sfTopPad=(Math.pow(2,ri)*SLOT/2)-(MATCH_H/2);
+      const MATCH_H=52;
+      const gaps=[8,68,188,428];
+      const sfTopPad=(gaps[ri-1]||8)/2+MATCH_H/2-MATCH_H/2+(gaps[ri-1]||8);
       html+=`<div id="bcol-final" style="width:${COL_WIDTH}px;flex-shrink:0;padding-top:${sfTopPad}px">
         <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898;margin-bottom:8px;padding:0 4px">Final</div>
         <div style="display:flex;flex-direction:column;gap:8px">
