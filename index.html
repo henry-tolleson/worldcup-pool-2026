@@ -627,26 +627,23 @@ function renderBracket(){
 
   RENDER_ROUNDS.forEach((rnd)=>{
     const ri=rnd.ri;
-    // Each R32 match card = 52px tall, 8px gap = 60px per slot
-    // R16 match should center between 2 R32 slots = 120px block
-    //   topPad = 60px - 26px = 34px, gap = 120px - 52px = 68px  (so 34 + 52 + 68 + 52 + ... centers correctly)
-    // QF centers between 2 R16 slots = 2 * (52+68) + 52 = 292px block... simplified:
-    // slotSize(ri) = 52 + gap(ri), gap(ri=0)=8, gap(ri=1)=68, gap(ri=2)=188, gap(ri=3)=428
-    // slotSize(ri) = 52 + gap(ri)
-    // gap(ri) = 2*slotSize(ri-1) - 52 = 2*(52+gap(ri-1)) - 52 = 52 + 2*gap(ri-1)
-    // gap: 8, 68, 188, 428
-    const MATCH_H=52;
-    const gaps=[8,68,188,428];
-    const gapBetween=gaps[ri]||8;
-    const topPad=ri===0?0:(gapBetween/2)+(MATCH_H/2)-MATCH_H/2;
+    // R32: card=52px, gap=8px, slot=60px
+    // R16: needs to center between 2 R32 slots (120px)
+    //   topPad = 34px (center of first pair), gap = 68px between R16 matches
+    // QF: center between 2 R16 slots (52+68+52=172px per pair from top of first to top of second)
+    //   topPad = 86px - 26px = 60px... 
+    // Precalculated: topPad and gap for each round index
+    const TOPS=[0,34,120,282];
+    const GAPS=[8,68,188,428];
+    const topPad=TOPS[ri]||0;
+    const gapBetween=GAPS[ri]||8;
 
     if(rnd.key==="final"){
       // Combined final + 3rd place column
       const finalMatches=BRACKET_MATCHES["final"]||[];
       const thirdMatches=BRACKET_MATCHES["third"]||[];
-      const MATCH_H=52;
-      const gaps=[8,68,188,428];
-      const sfTopPad=(gaps[ri-1]||8)/2+MATCH_H/2-MATCH_H/2+(gaps[ri-1]||8);
+      const TOPS=[0,34,120,282,634];
+      const sfTopPad=TOPS[ri]||282;
       html+=`<div id="bcol-final" style="width:${COL_WIDTH}px;flex-shrink:0;padding-top:${sfTopPad}px">
         <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898;margin-bottom:8px;padding:0 4px">Final</div>
         <div style="display:flex;flex-direction:column;gap:8px">
