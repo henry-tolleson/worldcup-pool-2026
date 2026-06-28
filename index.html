@@ -1010,12 +1010,17 @@ async function handleAction(action, dataset){
     if(el2)el2.textContent=field==="gd"?(newVal>0?`+${newVal}`:newVal===0?"0":`${newVal}`):newVal;
   }
   else if(action==="save-third-slots"){
-    const slots={...(state.thirdPlaceSlots||{})};
+    const slots={};
     document.querySelectorAll("[data-third-grp]").forEach(inp=>{
       const grp=decodeURIComponent(inp.dataset.thirdGrp);
-      slots[grp]=inp.value.trim();
+      const val=inp.value.trim();
+      if(val) slots[grp]=val;
     });
-    await saveState({...state,thirdPlaceSlots:slots});
+    // Merge with existing slots
+    const merged={...(state.thirdPlaceSlots||{}),...slots};
+    // Update state immediately before Firebase fires onValue
+    state={...state,thirdPlaceSlots:merged};
+    await set(ref(db,"poolState/thirdPlaceSlots"),merged);
     alert("3rd place slots saved!");
   }
   else if(action==="save-bracket-results"){
@@ -1023,9 +1028,10 @@ async function handleAction(action, dataset){
     document.querySelectorAll("[data-bracket-rnd]").forEach(s=>{
       const rnd=s.dataset.bracketRnd,mid=s.dataset.bracketMid;
       if(!br[rnd])br[rnd]={};
-      br[rnd][mid]=s.value;
+      if(s.value) br[rnd][mid]=s.value;
     });
-    await saveState({...state,bracketResults:br});
+    state={...state,bracketResults:br};
+    await set(ref(db,"poolState/bracketResults"),br);
     alert("Bracket results saved!");
   }
   else if(action==="save-standings"){
