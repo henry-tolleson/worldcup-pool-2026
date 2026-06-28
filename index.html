@@ -319,13 +319,18 @@ async function saveState(s){
 function render(){
   const app=document.getElementById("app");
   if(!state){app.innerHTML='<div class="loading">Loading…</div>';return;}
-  if(view==="login")app.innerHTML=renderLogin();
-  else if(view==="pin")app.innerHTML=renderPin();
-  else if(view==="dashboard")app.innerHTML=renderDashboard();
-  else if(view==="group-picks")app.innerHTML=renderGroupPicks();
-  else if(view==="ko-picks")app.innerHTML=renderKoPicks();
-  else if(view==="admin")app.innerHTML=renderAdmin();
-  attachHandlers();
+  try {
+    if(view==="login")app.innerHTML=renderLogin();
+    else if(view==="pin")app.innerHTML=renderPin();
+    else if(view==="dashboard")app.innerHTML=renderDashboard();
+    else if(view==="group-picks")app.innerHTML=renderGroupPicks();
+    else if(view==="ko-picks")app.innerHTML=renderKoPicks();
+    else if(view==="admin")app.innerHTML=renderAdmin();
+    attachHandlers();
+  } catch(e) {
+    console.error("Render error:", e);
+    app.innerHTML=`<div style="padding:20px;font-family:sans-serif"><p style="color:#dc2626;font-size:14px">Something went wrong: ${e.message}</p><button onclick="view='login';render()" style="margin-top:12px;padding:8px 16px;cursor:pointer">Go back</button></div>`;
+  }
 }
 
 function renderLogin(){
@@ -756,12 +761,17 @@ function renderAdmin(){
 }
 
 function renderAdminContent(){
-  if(adminTab==="results")return renderAdminResults();
-  if(adminTab==="rounds")return renderAdminRounds();
-  if(adminTab==="overrides")return renderAdminOverrides();
-  if(adminTab==="picks")return renderAdminPicks();
-  if(adminTab==="standings")return renderAdminStandings();
-  if(adminTab==="bracket")return renderAdminBracket();
+  try {
+    if(adminTab==="results")return renderAdminResults();
+    if(adminTab==="rounds")return renderAdminRounds();
+    if(adminTab==="overrides")return renderAdminOverrides();
+    if(adminTab==="picks")return renderAdminPicks();
+    if(adminTab==="standings")return renderAdminStandings();
+    if(adminTab==="bracket")return renderAdminBracket();
+  } catch(e) {
+    console.error("Admin render error:", e);
+    return `<div class="notice">Error loading tab: ${e.message}</div>`;
+  }
   return"";
 }
 
@@ -1148,6 +1158,7 @@ onValue(stateRef,snapshot=>{
     if(!data.results)data.results={groups:{},knockout:{}};
     if(!data.overrides)data.overrides={};
     if(!data.bracketResults)data.bracketResults={r32:{},r16:{},qf:{},sf:{},final:{},third:{}};
+    ["r32","r16","qf","sf","final","third"].forEach(r=>{if(!data.bracketResults[r])data.bracketResults[r]={};});
     if(!data.thirdPlaceSlots)data.thirdPlaceSlots={};
     if(!data.groupStandings){data.groupStandings=Object.fromEntries(GROUPS.map(g=>[g.name,Object.fromEntries(g.teams.map(t=>[t,{pts:0,gd:0}]))]));}
     state=data;
