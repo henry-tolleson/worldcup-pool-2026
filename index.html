@@ -671,8 +671,8 @@ function renderBracket(){
       var thirdCenter=(sf2Center+totalH)/2;
       var thirdTop=Math.round(thirdCenter-R32_H/2)+16;
       // Ensure at least 24px gap between Final bottom and 3rd place label
-      var minThirdTop=finalTop+R32_H+24;
-      if(thirdTop<minThirdTop)thirdTop=minThirdTop;
+      // Gap between Final and 3rd place = same as R32 gap (R32_GAP = 20px)
+      var thirdTop=finalTop+R32_H+R32_GAP+16; // 16px for the "3rd Place" label
       var fm=(BRACKET_MATCHES["final"]||[])[0];
       var tm=(BRACKET_MATCHES["third"]||[])[0];
       if(fm)html+='<div style="position:absolute;top:'+finalTop+'px;left:0">'+renderMatchCard(fm,"final",s,COL_WIDTH)+'</div>';
