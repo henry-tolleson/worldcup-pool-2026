@@ -1028,11 +1028,8 @@ async function handleAction(action, dataset){
       const val=inp.value.trim();
       if(val) slots[grp]=val;
     });
-    // Merge with existing slots
     const merged={...(state.thirdPlaceSlots||{}),...slots};
-    // Update state immediately before Firebase fires onValue
-    state={...state,thirdPlaceSlots:merged};
-    await set(ref(db,"poolState/thirdPlaceSlots"),merged);
+    await saveState({...state,thirdPlaceSlots:merged});
     alert("3rd place slots saved!");
   }
   else if(action==="save-bracket-results"){
@@ -1042,8 +1039,7 @@ async function handleAction(action, dataset){
       if(!br[rnd])br[rnd]={};
       if(s.value) br[rnd][mid]=s.value;
     });
-    state={...state,bracketResults:br};
-    await set(ref(db,"poolState/bracketResults"),br);
+    await saveState({...state,bracketResults:br});
     alert("Bracket results saved!");
   }
   else if(action==="save-standings"){
@@ -1168,17 +1164,18 @@ onValue(stateRef,snapshot=>{
     state=JSON.parse(JSON.stringify(DEFAULT_STATE));
     set(stateRef,state);
   }
-  // Only auto-render on first load; after that, only render when we explicitly call it
   if(initialLoad){
     initialLoad=false;
     render();
   } else {
-    // Silently update state in background — scores/leaderboard will refresh next time user navigates
-    // But if we're on dashboard, refresh tab content only (not the whole page)
+    // Don't re-render admin view on background Firebase updates
+    // This prevents input fields from being wiped while admin is editing
     if(view==="dashboard"){
       const tc=document.getElementById("tab-content");
       if(tc){tc.innerHTML=renderTabContent();attachHandlers();}
     }
+    // For admin: silently update state but do NOT re-render the page
+    // Admin will see fresh data next time they navigate to a tab
   }
 });
 </script>
