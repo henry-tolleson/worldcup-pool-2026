@@ -525,7 +525,8 @@ function renderAllPicks(me){
       ["first","second"].forEach((pos,pi)=>{
         html+='<div style="display:flex;align-items:center;border-bottom:0.5px solid var(--border)">';
         html+='<div style="width:28px;flex-shrink:0;font-size:10px;color:var(--muted);text-align:center;padding:8px 0">'+(pi+1)+'</div>';
-        html+='<div style="flex:1;font-size:12px;color:var(--muted2);padding:8px 0">'+(res?('<span style="font-weight:500;color:var(--text)">'+(pos==="first"?res.first:res.second)+'</span>'):"TBD")+'</div>';
+        const resTeam=res?(pos==="first"?res.first:res.second):"";
+        html+='<div style="flex:1;font-size:12px;color:var(--muted2);padding:8px 0">'+(res?('<span style="font-weight:500;color:var(--text)">'+(FLAGS[resTeam]||"")+" "+resTeam+'</span>'):"TBD")+'</div>';
         PLAYERS.forEach(p=>{
           const pick=(state.picks[p.name]?.groups||{})[g.name]?.[pos]||"";
           const correct=res&&pick&&pick===(pos==="first"?res.first:res.second);
@@ -551,7 +552,7 @@ function renderAllPicks(me){
         html+='<div style="background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px">';
         // Match header
         html+='<div style="padding:8px 12px;background:var(--surface2);border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between">';
-        html+='<div style="font-size:12px;font-weight:500;color:var(--text)">'+match.home+' vs '+match.away+'</div>';
+        html+='<div style="font-size:12px;font-weight:500;color:var(--text)">'+(FLAGS[match.home]||"")+" "+match.home+' vs '+(FLAGS[match.away]||"")+" "+match.away+'</div>';
         if(winner) html+='<div style="font-size:11px;font-weight:600;color:#16a34a">'+winner+' won</div>';
         html+='</div>';
         // Players row
