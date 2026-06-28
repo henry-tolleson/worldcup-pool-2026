@@ -384,11 +384,16 @@ function renderDashboard(){
 
 function renderTabContent(){
   const p=currentPlayer;
-  if(tab==="picks")return renderPicksTab(p);
-  if(tab==="leaderboard")return renderLeaderboard(p);
-  if(tab==="all picks")return renderAllPicks(p);
-  if(tab==="group standings")return renderGroupStandings();
-  if(tab==="bracket")return renderBracket();
+  try {
+    if(tab==="picks")return renderPicksTab(p);
+    if(tab==="leaderboard")return renderLeaderboard(p);
+    if(tab==="all picks")return renderAllPicks(p);
+    if(tab==="group standings")return renderGroupStandings();
+    if(tab==="bracket")return renderBracket();
+  } catch(e){
+    console.error("Tab render error ("+tab+"):", e);
+    return '<div class="notice" style="color:#dc2626">Error in '+tab+': '+e.message+'</div>';
+  }
   return"";
 }
 
@@ -456,6 +461,19 @@ function renderLeaderboard(me){
   return html+"</div>";
 }
 
+function abbrevTeam(name){
+  if(!name)return"—";
+  // Special cases
+  const map={"South Africa":"S.Africa","South Korea":"S.Korea","Bosnia-Herzegovina":"Bosnia","Saudi Arabia":"S.Arabia","Cape Verde":"C.Verde","Ivory Coast":"I.Coast","New Zealand":"NZ","Congo DR":"Congo","Uzbekistan":"Uzbek","Curaçao":"Curacao","Türkiye":"Turkey","Bosnia-Herzegovina":"Bosnia"};
+  if(map[name])return map[name];
+  // If short enough, return as is
+  if(name.length<=7)return name;
+  // Split and abbreviate first word if two words
+  const parts=name.split(" ");
+  if(parts.length>=2)return parts[0].slice(0,1)+"."+parts[parts.length-1];
+  return name.slice(0,7);
+}
+
 function renderAllPicks(me){
   // Option A: round tabs at top, all players shown for selected round
   const selRound=window._picksRound||"group";
@@ -507,7 +525,7 @@ function renderAllPicks(me){
           const correct=res&&pick&&pick===(pos==="first"?res.first:res.second);
           const partial=res&&pick&&(pick===res.first||pick===res.second)&&!correct;
           const isMe=p.name===me.name;
-          html+='<div style="width:48px;flex-shrink:0;text-align:center;padding:6px 2px"><div style="font-size:10px;font-weight:'+(isMe?600:400)+';color:'+(correct?"#16a34a":partial?"#d97706":pick?"var(--text)":"var(--muted)")+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+( pick?pick.slice(0,4):"—")+'</div></div>';
+          html+='<div style="width:48px;flex-shrink:0;text-align:center;padding:6px 2px"><div style="font-size:10px;font-weight:'+(isMe?600:400)+';color:'+(correct?"#16a34a":partial?"#d97706":pick?"var(--text)":"var(--muted)")+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+( pick?abbrevTeam(pick):"—")+'</div></div>';
         });
         html+='</div>';
       });
@@ -539,7 +557,7 @@ function renderAllPicks(me){
           const isMe=p.name===me.name;
           html+='<div style="flex:1;padding:8px 4px;text-align:center;border-right:0.5px solid var(--border)">';
           html+='<div style="width:8px;height:8px;border-radius:50%;background:'+p.accent+';margin:0 auto 4px"></div>';
-          html+='<div style="font-size:10px;font-weight:'+(isMe?600:400)+';color:'+(correct?"#16a34a":pick?"var(--text)":"var(--muted)")+'"'+(isWc?' class="rainbow"':'')+'>'+( pick?pick.team.slice(0,6):"—")+'</div>';
+          html+='<div style="font-size:10px;font-weight:'+(isMe?600:400)+';color:'+(correct?"#16a34a":pick?"var(--text)":"var(--muted)")+'"'+(isWc?' class="rainbow"':'')+'>'+( pick?abbrevTeam(pick.team):"—")+'</div>';
           if(isWc) html+='<div style="font-size:9px;color:#7c3aed">WC</div>';
           html+='</div>';
         });
