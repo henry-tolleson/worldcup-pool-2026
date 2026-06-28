@@ -1072,9 +1072,14 @@ async function handleAction(action, dataset){
       const val=(inp.value||"").trim();
       if(val) slots[grp]=val;
     });
+    // Sanitize keys for Firebase (replace / with _)
+    const sanitized={};
+    Object.keys({...thirdSlots,...slots}).forEach(function(k){
+      sanitized[k.replace(/\//g,"_")]=({...thirdSlots,...slots})[k];
+    });
     thirdSlots={...thirdSlots,...slots};
     try {
-      await set(thirdSlotsRef, JSON.parse(JSON.stringify(thirdSlots)));
+      await set(thirdSlotsRef, sanitized);
       alert("3rd place slots saved!");
     } catch(e) {
       alert("Save failed: "+e.message);
@@ -1225,7 +1230,13 @@ let thirdSlots={};
 // Separate persistent listener for 3rd place slots - never gets overwritten
 onValue(thirdSlotsRef, snapshot=>{
   const data=snapshot.val();
-  if(data) thirdSlots=data;
+  if(data){
+    // Restore / from _ in keys
+    thirdSlots={};
+    Object.keys(data).forEach(function(k){
+      thirdSlots[k.replace(/_/g,"/")]=data[k];
+    });
+  }
 });
 
 let initialLoad = true;
