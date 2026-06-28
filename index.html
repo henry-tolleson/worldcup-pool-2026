@@ -627,13 +627,11 @@ function renderBracket(){
 
   RENDER_ROUNDS.forEach((rnd)=>{
     const ri=rnd.ri;
-    // R32: card=52px, gap=8px, slot=60px
-    // R16: needs to center between 2 R32 slots (120px)
-    //   topPad = 34px (center of first pair), gap = 68px between R16 matches
-    // QF: center between 2 R16 slots (52+68+52=172px per pair from top of first to top of second)
-    //   topPad = 86px - 26px = 60px... 
-    // Precalculated: topPad and gap for each round index
-    const TOPS=[0,34,120,282];
+    // R32: h=52px gap=8px slot=60px
+    // R16: topPad=60-26=34, gap=120-52=68, slot=120px
+    // QF:  topPad=120-26=94, gap=240-52=188, slot=240px
+    // SF:  topPad=240-26=214, gap=480-52=428, slot=480px
+    const TOPS=[0,34,94,214];
     const GAPS=[8,68,188,428];
     const topPad=TOPS[ri]||0;
     const gapBetween=GAPS[ri]||8;
@@ -642,8 +640,7 @@ function renderBracket(){
       // Combined final + 3rd place column
       const finalMatches=BRACKET_MATCHES["final"]||[];
       const thirdMatches=BRACKET_MATCHES["third"]||[];
-      const TOPS=[0,34,120,282,634];
-      const sfTopPad=TOPS[ri]||282;
+      const sfTopPad=454;
       html+=`<div id="bcol-final" style="width:${COL_WIDTH}px;flex-shrink:0;padding-top:${sfTopPad}px">
         <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898;margin-bottom:8px;padding:0 4px">Final</div>
         <div style="display:flex;flex-direction:column;gap:8px">
