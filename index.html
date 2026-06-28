@@ -589,119 +589,86 @@ function getSlotLabel(slot,s){
 function renderMatchCard(match, rndKey, s, colWidth){
   const home=resolveTeam(match.home,s)||getSlotLabel(match.home,s);
   const away=resolveTeam(match.away,s)||getSlotLabel(match.away,s);
-  const winner=s.bracketResults?.[rndKey]?.[match.id]||"";
+  const winner=(s.bracketResults||{})[rndKey]?.[match.id]||"";
   const homeIsReal=!!resolveTeam(match.home,s);
   const awayIsReal=!!resolveTeam(match.away,s);
   const homeWon=winner&&winner===home;
   const awayWon=winner&&winner===away;
   const isFinal=rndKey==="final";
-  const flag=t=>FLAGS[t]||"";
-  return `<div style="background:#fff;border:0.5px solid ${isFinal?"#1a1a1a":"#e8e4dc"};border-radius:8px;overflow:hidden;min-width:${colWidth-8}px">
-    <div style="display:flex;align-items:center;padding:6px 8px;border-bottom:0.5px solid #f0ede6;background:${homeWon?"#f0fdf4":"#fff"}">
-      ${homeIsReal?`<span style="margin-right:5px;font-size:13px">${flag(home)}</span>`:""}
-      <span style="font-size:11px;font-weight:${homeIsReal?500:400};color:${homeIsReal?(homeWon?"#16a34a":"#1a1a1a"):"#b0a898"};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${home}</span>
-      ${winner?`<span style="font-size:11px;font-weight:600;color:${homeWon?"#16a34a":"#ccc8be"};margin-left:4px">${homeWon?"✓":""}</span>`:""}
-    </div>
-    <div style="display:flex;align-items:center;padding:6px 8px;background:${awayWon?"#f0fdf4":"#fff"}">
-      ${awayIsReal?`<span style="margin-right:5px;font-size:13px">${flag(away)}</span>`:""}
-      <span style="font-size:11px;font-weight:${awayIsReal?500:400};color:${awayIsReal?(awayWon?"#16a34a":"#1a1a1a"):"#b0a898"};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${away}</span>
-      ${winner?`<span style="font-size:11px;font-weight:600;color:${awayWon?"#16a34a":"#ccc8be"};margin-left:4px">${awayWon?"✓":""}</span>`:""}
-    </div>
-  </div>`;
-}
-
-function renderMatchCard(match, rndKey, s, colWidth){
-  const home=resolveTeam(match.home,s)||getSlotLabel(match.home,s);
-  const away=resolveTeam(match.away,s)||getSlotLabel(match.away,s);
-  const winner=s.bracketResults?.[rndKey]?.[match.id]||"";
-  const homeIsReal=!!resolveTeam(match.home,s);
-  const awayIsReal=!!resolveTeam(match.away,s);
-  const homeWon=winner&&winner===home;
-  const awayWon=winner&&winner===away;
-  const isFinal=rndKey==="final";
-  const flag=t=>FLAGS[t]||"";
-  return `<div style="background:#fff;border:0.5px solid ${isFinal?"#1a1a1a":"#e8e4dc"};border-radius:8px;overflow:hidden;width:${colWidth-8}px;flex-shrink:0">
-    <div style="display:flex;align-items:center;padding:6px 8px;border-bottom:0.5px solid #f0ede6;background:${homeWon?"#f0fdf4":"#fff"}">
-      ${homeIsReal?`<span style="margin-right:5px;font-size:13px">${flag(home)}</span>`:""}
-      <span style="font-size:11px;font-weight:${homeIsReal?500:400};color:${homeIsReal?(homeWon?"#16a34a":"#1a1a1a"):"#b0a898"};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${home}</span>
-      ${winner?`<span style="font-size:11px;font-weight:600;color:${homeWon?"#16a34a":"transparent"};margin-left:4px">✓</span>`:""}
-    </div>
-    <div style="display:flex;align-items:center;padding:6px 8px;background:${awayWon?"#f0fdf4":"#fff"}">
-      ${awayIsReal?`<span style="margin-right:5px;font-size:13px">${flag(away)}</span>`:""}
-      <span style="font-size:11px;font-weight:${awayIsReal?500:400};color:${awayIsReal?(awayWon?"#16a34a":"#1a1a1a"):"#b0a898"};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${away}</span>
-      ${winner?`<span style="font-size:11px;font-weight:600;color:${awayWon?"#16a34a":"transparent"};margin-left:4px">✓</span>`:""}
-    </div>
-  </div>`;
+  const flag=t=>(FLAGS[t]||"");
+  const w=colWidth-8;
+  let html="";
+  html+='<div style="background:#fff;border:0.5px solid '+(isFinal?"#1a1a1a":"#e8e4dc")+';border-radius:8px;overflow:hidden;width:'+w+'px">';
+  html+='<div style="display:flex;align-items:center;padding:6px 8px;border-bottom:0.5px solid #f0ede6;background:'+(homeWon?"#f0fdf4":"#fff")+'">';
+  if(homeIsReal) html+='<span style="margin-right:5px;font-size:13px">'+flag(home)+'</span>';
+  html+='<span style="font-size:11px;font-weight:'+(homeIsReal?500:400)+';color:'+(homeIsReal?(homeWon?"#16a34a":"#1a1a1a"):"#b0a898")+';flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+home+'</span>';
+  if(winner) html+='<span style="font-size:11px;font-weight:600;color:'+(homeWon?"#16a34a":"transparent")+';margin-left:4px">✓</span>';
+  html+='</div>';
+  html+='<div style="display:flex;align-items:center;padding:6px 8px;background:'+(awayWon?"#f0fdf4":"#fff")+'">';
+  if(awayIsReal) html+='<span style="margin-right:5px;font-size:13px">'+flag(away)+'</span>';
+  html+='<span style="font-size:11px;font-weight:'+(awayIsReal?500:400)+';color:'+(awayIsReal?(awayWon?"#16a34a":"#1a1a1a"):"#b0a898")+';flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+away+'</span>';
+  if(winner) html+='<span style="font-size:11px;font-weight:600;color:'+(awayWon?"#16a34a":"transparent")+';margin-left:4px">✓</span>';
+  html+='</div></div>';
+  return html;
 }
 
 function renderBracket(){
-  const s=state;
-  const COL_WIDTH=148;
-  // Each R32 match = 52px tall. Gap between R32 matches = 8px. Slot = 60px.
-  // R16 match must vertically center between 2 R32 slots = 120px block.
-  //   Place R16 match at: top of pair + 34px (= 60px center - 26px half-height)
-  //   Gap between R16 matches = 120px - 52px = 68px
-  // Use absolute positioning within a relative container sized to fit all R32 matches
-  const R32_H=52, R32_GAP=8, SLOT=R32_H+R32_GAP; // 60px per slot
-  const numR32=16;
-  const totalHeight=numR32*SLOT - R32_GAP; // total height of R32 column
+  var s=state;
+  var COL_WIDTH=148;
+  var R32_H=52, R32_GAP=8, SLOT=R32_H+R32_GAP;
+  var numR32=16;
+  var totalH=numR32*SLOT-R32_GAP;
 
-  const RENDER_ROUNDS=[
+  var RENDER_ROUNDS=[
     {key:"r32",full:"Round of 32"},
     {key:"r16",full:"Round of 16"},
     {key:"qf",full:"Quarterfinals"},
     {key:"sf",full:"Semifinals"},
-    {key:"final",full:"Final & 3rd Place"},
+    {key:"final",full:"Final & 3rd Place"}
   ];
 
-  let html=`<div>
-    <div id="bracket-tabs" style="display:flex;gap:0;overflow-x:auto;border-bottom:1px solid #e8e4dc;scrollbar-width:none;">
-      ${BRACKET_ROUNDS.map(r=>`<div class="btab" data-action="bracket-scroll" data-rnd="${r.key}" style="padding:8px 10px;font-size:12px;font-weight:500;color:#b0a898;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap;flex-shrink:0">${r.label}</div>`).join("")}
-    </div>
-    <div id="bracket-outer" style="overflow-x:auto;scrollbar-width:none;padding:12px 0 16px;">
-      <div style="display:flex;gap:0;padding:0 20px;position:relative;">`;
-
-  // For each round column, calculate match positions using absolute positioning
-  RENDER_ROUNDS.forEach((rnd,ri)=>{
-    const matches = rnd.key==="final"
-      ? [...(BRACKET_MATCHES["final"]||[]), ...(BRACKET_MATCHES["third"]||[])]
-      : (BRACKET_MATCHES[rnd.key]||[]);
-
-    // slot size doubles each round: 60, 120, 240, 480, 960
-    const slotSize = SLOT * Math.pow(2, ri); // height each match "owns"
-    const colHeight = totalHeight;
-
-    html+=`<div id="bcol-${rnd.key}" style="width:${COL_WIDTH}px;flex-shrink:0;position:relative;height:${colHeight+30}px;">
-      <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898;margin-bottom:6px;padding:0 4px">${rnd.full}</div>`;
-
-    if(rnd.key==="final"){
-      // Final: center in top half, 3rd place center in bottom half
-      const finalMatch=BRACKET_MATCHES["final"]?.[0];
-      const thirdMatch=BRACKET_MATCHES["third"]?.[0];
-      const finalSlot=SLOT*Math.pow(2,3); // SF slot = 480
-      const finalTop=Math.round(finalSlot/2 - R32_H/2)+16;
-      const thirdTop=finalTop + R32_H + 40;
-
-      if(finalMatch) html+=`<div style="position:absolute;top:${finalTop}px;left:0">${renderMatchCard(finalMatch,"final",s,COL_WIDTH)}</div>`;
-      if(thirdMatch){
-        html+=`<div style="position:absolute;top:${thirdTop+20}px;left:0;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898">3rd Place</div>`;
-        html+=`<div style="position:absolute;top:${thirdTop+34}px;left:0">${renderMatchCard(thirdMatch,"third",s,COL_WIDTH)}</div>`;
-      }
-    } else {
-      matches.forEach((match,mi)=>{
-        // Center of this match's slot
-        const slotTop = mi * slotSize;
-        const matchTop = Math.round(slotTop + slotSize/2 - R32_H/2) + 16;
-        html+=`<div style="position:absolute;top:${matchTop}px;left:0">${renderMatchCard(match,rnd.key,s,COL_WIDTH)}</div>`;
-      });
-    }
-
-    html+="</div>";
+  var tabsHtml="";
+  BRACKET_ROUNDS.forEach(function(r){
+    tabsHtml+='<div class="btab" data-action="bracket-scroll" data-rnd="'+r.key+'" style="padding:8px 10px;font-size:12px;font-weight:500;color:#b0a898;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap;flex-shrink:0">'+r.label+'</div>';
   });
 
-  html+=`</div></div>
-    <div style="padding:0 20px 4px;font-size:11px;color:#b0a898">← Swipe to see full bracket</div>
-  </div>`;
+  var html="";
+  html+='<div>';
+  html+='<div id="bracket-tabs" style="display:flex;gap:0;overflow-x:auto;border-bottom:1px solid #e8e4dc;scrollbar-width:none;">'+tabsHtml+'</div>';
+  html+='<div id="bracket-outer" style="overflow-x:auto;scrollbar-width:none;padding:12px 0 16px;">';
+  html+='<div style="display:flex;gap:0;padding:0 20px;">';
+
+  RENDER_ROUNDS.forEach(function(rnd,ri){
+    var slotSize=SLOT*Math.pow(2,ri);
+    html+='<div id="bcol-'+rnd.key+'" style="width:'+COL_WIDTH+'px;flex-shrink:0;position:relative;height:'+(totalH+60)+'px;">';
+    html+='<div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898;margin-bottom:6px;padding:0 4px">'+rnd.full+'</div>';
+
+    if(rnd.key==="final"){
+      var sfSlot=SLOT*Math.pow(2,3);
+      var finalTop=Math.round(sfSlot/2-R32_H/2)+16;
+      var thirdTop=finalTop+R32_H+50;
+      var fm=(BRACKET_MATCHES["final"]||[])[0];
+      var tm=(BRACKET_MATCHES["third"]||[])[0];
+      if(fm){
+        html+='<div style="position:absolute;top:'+finalTop+'px;left:0">'+renderMatchCard(fm,"final",s,COL_WIDTH)+'</div>';
+      }
+      if(tm){
+        html+='<div style="position:absolute;top:'+(thirdTop+16)+'px;left:0;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898">3rd Place</div>';
+        html+='<div style="position:absolute;top:'+(thirdTop+30)+'px;left:0">'+renderMatchCard(tm,"third",s,COL_WIDTH)+'</div>';
+      }
+    } else {
+      var matches=BRACKET_MATCHES[rnd.key]||[];
+      matches.forEach(function(match,mi){
+        var matchTop=Math.round(mi*slotSize + slotSize/2 - R32_H/2)+16;
+        html+='<div style="position:absolute;top:'+matchTop+'px;left:0">'+renderMatchCard(match,rnd.key,s,COL_WIDTH)+'</div>';
+      });
+    }
+    html+='</div>';
+  });
+
+  html+='</div></div>';
+  html+='<div style="padding:0 20px 4px;font-size:11px;color:#b0a898">&#8592; Swipe to see full bracket</div>';
+  html+='</div>';
   return html;
 }
 
