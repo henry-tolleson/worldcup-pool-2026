@@ -610,65 +610,97 @@ function renderMatchCard(match, rndKey, s, colWidth){
   </div>`;
 }
 
+function renderMatchCard(match, rndKey, s, colWidth){
+  const home=resolveTeam(match.home,s)||getSlotLabel(match.home,s);
+  const away=resolveTeam(match.away,s)||getSlotLabel(match.away,s);
+  const winner=s.bracketResults?.[rndKey]?.[match.id]||"";
+  const homeIsReal=!!resolveTeam(match.home,s);
+  const awayIsReal=!!resolveTeam(match.away,s);
+  const homeWon=winner&&winner===home;
+  const awayWon=winner&&winner===away;
+  const isFinal=rndKey==="final";
+  const flag=t=>FLAGS[t]||"";
+  return `<div style="background:#fff;border:0.5px solid ${isFinal?"#1a1a1a":"#e8e4dc"};border-radius:8px;overflow:hidden;width:${colWidth-8}px;flex-shrink:0">
+    <div style="display:flex;align-items:center;padding:6px 8px;border-bottom:0.5px solid #f0ede6;background:${homeWon?"#f0fdf4":"#fff"}">
+      ${homeIsReal?`<span style="margin-right:5px;font-size:13px">${flag(home)}</span>`:""}
+      <span style="font-size:11px;font-weight:${homeIsReal?500:400};color:${homeIsReal?(homeWon?"#16a34a":"#1a1a1a"):"#b0a898"};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${home}</span>
+      ${winner?`<span style="font-size:11px;font-weight:600;color:${homeWon?"#16a34a":"transparent"};margin-left:4px">✓</span>`:""}
+    </div>
+    <div style="display:flex;align-items:center;padding:6px 8px;background:${awayWon?"#f0fdf4":"#fff"}">
+      ${awayIsReal?`<span style="margin-right:5px;font-size:13px">${flag(away)}</span>`:""}
+      <span style="font-size:11px;font-weight:${awayIsReal?500:400};color:${awayIsReal?(awayWon?"#16a34a":"#1a1a1a"):"#b0a898"};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${away}</span>
+      ${winner?`<span style="font-size:11px;font-weight:600;color:${awayWon?"#16a34a":"transparent"};margin-left:4px">✓</span>`:""}
+    </div>
+  </div>`;
+}
+
 function renderBracket(){
   const s=state;
   const COL_WIDTH=148;
+  // Each R32 match = 52px tall. Gap between R32 matches = 8px. Slot = 60px.
+  // R16 match must vertically center between 2 R32 slots = 120px block.
+  //   Place R16 match at: top of pair + 34px (= 60px center - 26px half-height)
+  //   Gap between R16 matches = 120px - 52px = 68px
+  // Use absolute positioning within a relative container sized to fit all R32 matches
+  const R32_H=52, R32_GAP=8, SLOT=R32_H+R32_GAP; // 60px per slot
+  const numR32=16;
+  const totalHeight=numR32*SLOT - R32_GAP; // total height of R32 column
+
   const RENDER_ROUNDS=[
-    {key:"r32",label:"R32",full:"Round of 32",ri:0},
-    {key:"r16",label:"R16",full:"Round of 16",ri:1},
-    {key:"qf",label:"QF",full:"Quarterfinals",ri:2},
-    {key:"sf",label:"SF",full:"Semifinals",ri:3},
-    {key:"final",label:"Final",full:"Final & 3rd Place",ri:4},
+    {key:"r32",full:"Round of 32"},
+    {key:"r16",full:"Round of 16"},
+    {key:"qf",full:"Quarterfinals"},
+    {key:"sf",full:"Semifinals"},
+    {key:"final",full:"Final & 3rd Place"},
   ];
-  const totalCols=RENDER_ROUNDS.length;
-  let html=`
-  <div style="position:relative">
-    <div id="bracket-tabs" style="display:flex;gap:0;overflow-x:auto;border-bottom:1px solid #e8e4dc;margin-bottom:0;scrollbar-width:none;">
+
+  let html=`<div>
+    <div id="bracket-tabs" style="display:flex;gap:0;overflow-x:auto;border-bottom:1px solid #e8e4dc;scrollbar-width:none;">
       ${BRACKET_ROUNDS.map(r=>`<div class="btab" data-action="bracket-scroll" data-rnd="${r.key}" style="padding:8px 10px;font-size:12px;font-weight:500;color:#b0a898;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap;flex-shrink:0">${r.label}</div>`).join("")}
     </div>
-    <div id="bracket-outer" style="overflow-x:auto;scrollbar-width:none;padding-bottom:8px;">
-      <div id="bracket-inner" style="display:flex;gap:0;padding:12px 20px 0;min-width:${totalCols*COL_WIDTH+40}px;">
-  `;
+    <div id="bracket-outer" style="overflow-x:auto;scrollbar-width:none;padding:12px 0 16px;">
+      <div style="display:flex;gap:0;padding:0 20px;position:relative;">`;
 
-  RENDER_ROUNDS.forEach((rnd)=>{
-    const ri=rnd.ri;
-    // R32: h=52px gap=8px slot=60px
-    // R16: topPad=60-26=34, gap=120-52=68, slot=120px
-    // QF:  topPad=120-26=94, gap=240-52=188, slot=240px
-    // SF:  topPad=240-26=214, gap=480-52=428, slot=480px
-    const TOPS=[0,34,94,214];
-    const GAPS=[8,68,188,428];
-    const topPad=TOPS[ri]||0;
-    const gapBetween=GAPS[ri]||8;
+  // For each round column, calculate match positions using absolute positioning
+  RENDER_ROUNDS.forEach((rnd,ri)=>{
+    const matches = rnd.key==="final"
+      ? [...(BRACKET_MATCHES["final"]||[]), ...(BRACKET_MATCHES["third"]||[])]
+      : (BRACKET_MATCHES[rnd.key]||[]);
+
+    // slot size doubles each round: 60, 120, 240, 480, 960
+    const slotSize = SLOT * Math.pow(2, ri); // height each match "owns"
+    const colHeight = totalHeight;
+
+    html+=`<div id="bcol-${rnd.key}" style="width:${COL_WIDTH}px;flex-shrink:0;position:relative;height:${colHeight+30}px;">
+      <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898;margin-bottom:6px;padding:0 4px">${rnd.full}</div>`;
 
     if(rnd.key==="final"){
-      // Combined final + 3rd place column
-      const finalMatches=BRACKET_MATCHES["final"]||[];
-      const thirdMatches=BRACKET_MATCHES["third"]||[];
-      const sfTopPad=454;
-      html+=`<div id="bcol-final" style="width:${COL_WIDTH}px;flex-shrink:0;padding-top:${sfTopPad}px">
-        <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898;margin-bottom:8px;padding:0 4px">Final</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${finalMatches.map(m=>renderMatchCard(m,"final",s,COL_WIDTH)).join("")}
-        </div>
-        <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898;margin:20px 0 8px;padding:0 4px">3rd Place</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${thirdMatches.map(m=>renderMatchCard(m,"third",s,COL_WIDTH)).join("")}
-        </div>
-      </div>`;
+      // Final: center in top half, 3rd place center in bottom half
+      const finalMatch=BRACKET_MATCHES["final"]?.[0];
+      const thirdMatch=BRACKET_MATCHES["third"]?.[0];
+      const finalSlot=SLOT*Math.pow(2,3); // SF slot = 480
+      const finalTop=Math.round(finalSlot/2 - R32_H/2)+16;
+      const thirdTop=finalTop + R32_H + 40;
+
+      if(finalMatch) html+=`<div style="position:absolute;top:${finalTop}px;left:0">${renderMatchCard(finalMatch,"final",s,COL_WIDTH)}</div>`;
+      if(thirdMatch){
+        html+=`<div style="position:absolute;top:${thirdTop+20}px;left:0;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898">3rd Place</div>`;
+        html+=`<div style="position:absolute;top:${thirdTop+34}px;left:0">${renderMatchCard(thirdMatch,"third",s,COL_WIDTH)}</div>`;
+      }
     } else {
-      const matches=BRACKET_MATCHES[rnd.key]||[];
-      html+=`<div id="bcol-${rnd.key}" style="width:${COL_WIDTH}px;flex-shrink:0;padding-top:${topPad}px">
-        <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898;margin-bottom:8px;padding:0 4px">${rnd.full}</div>
-        <div style="display:flex;flex-direction:column;gap:${gapBetween}px">
-          ${matches.map(m=>renderMatchCard(m,rnd.key,s,COL_WIDTH)).join("")}
-        </div>
-      </div>`;
+      matches.forEach((match,mi)=>{
+        // Center of this match's slot
+        const slotTop = mi * slotSize;
+        const matchTop = Math.round(slotTop + slotSize/2 - R32_H/2) + 16;
+        html+=`<div style="position:absolute;top:${matchTop}px;left:0">${renderMatchCard(match,rnd.key,s,COL_WIDTH)}</div>`;
+      });
     }
+
+    html+="</div>";
   });
 
   html+=`</div></div>
-    <div style="padding:4px 20px 8px;font-size:11px;color:#b0a898">← Swipe to see full bracket</div>
+    <div style="padding:0 20px 4px;font-size:11px;color:#b0a898">← Swipe to see full bracket</div>
   </div>`;
   return html;
 }
@@ -776,6 +808,9 @@ function renderAdminContent(){
 }
 
 function renderAdminResults(){
+  if(!state.results)state.results={groups:{},knockout:{}};
+  if(!state.results.groups)state.results.groups={};
+  if(!state.results.knockout)state.results.knockout={};
   let html=`<div class="section-title">Group stage results</div>`;
   GROUPS.forEach(g=>{
     const res=state.results.groups[g.name]||{};
