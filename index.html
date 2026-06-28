@@ -658,15 +658,27 @@ function renderBracket(){
     html+='<div id="bcol-'+rnd.key+'" style="width:'+COL_WIDTH+'px;flex-shrink:0;position:relative;height:'+(totalH+60)+'px;">';
     html+='<div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898;margin-bottom:6px;padding:0 4px">'+rnd.full+'</div>';
     if(rnd.key==="final"){
-      var sfSlot=SLOT*Math.pow(2,3);
-      var finalTop=Math.round(sfSlot/2-R32_H/2)+16;
-      var thirdTop=finalTop+R32_H+50;
+      // SF slot size = SLOT * 2^3. Two SF matches sit at top and bottom of totalH.
+      // SF match 1 center = slotSize/2, SF match 2 center = totalH - slotSize/2
+      // Final should sit exactly between them = totalH/2
+      // 3rd place sits between the bottom SF and the bottom of the bracket
+      var sfSlotSize=SLOT*Math.pow(2,3); // 576px
+      var sf1Center=sfSlotSize/2; // center of top SF match
+      var sf2Center=totalH-sfSlotSize/2; // center of bottom SF match
+      var finalCenter=(sf1Center+sf2Center)/2; // exactly between
+      var finalTop=Math.round(finalCenter-R32_H/2)+16;
+      // 3rd place: between bottom SF and end of bracket, with a 24px gap below Final
+      var thirdCenter=(sf2Center+totalH)/2;
+      var thirdTop=Math.round(thirdCenter-R32_H/2)+16;
+      // Ensure at least 24px gap between Final bottom and 3rd place label
+      var minThirdTop=finalTop+R32_H+24;
+      if(thirdTop<minThirdTop)thirdTop=minThirdTop;
       var fm=(BRACKET_MATCHES["final"]||[])[0];
       var tm=(BRACKET_MATCHES["third"]||[])[0];
       if(fm)html+='<div style="position:absolute;top:'+finalTop+'px;left:0">'+renderMatchCard(fm,"final",s,COL_WIDTH)+'</div>';
       if(tm){
-        html+='<div style="position:absolute;top:'+(thirdTop+16)+'px;left:0;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898">3rd Place</div>';
-        html+='<div style="position:absolute;top:'+(thirdTop+30)+'px;left:0">'+renderMatchCard(tm,"third",s,COL_WIDTH)+'</div>';
+        html+='<div style="position:absolute;top:'+(thirdTop-14)+'px;left:0;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898">3rd Place</div>';
+        html+='<div style="position:absolute;top:'+thirdTop+'px;left:0">'+renderMatchCard(tm,"third",s,COL_WIDTH)+'</div>';
       }
     } else {
       var matches=BRACKET_MATCHES[rnd.key]||[];
