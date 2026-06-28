@@ -1069,12 +1069,16 @@ async function handleAction(action, dataset){
     const slots={};
     document.querySelectorAll("[data-third-grp]").forEach(inp=>{
       const grp=decodeURIComponent(inp.dataset.thirdGrp);
-      const val=inp.value.trim();
+      const val=(inp.value||"").trim();
       if(val) slots[grp]=val;
     });
     thirdSlots={...thirdSlots,...slots};
-    await set(thirdSlotsRef, thirdSlots);
-    alert("3rd place slots saved!");
+    try {
+      await set(thirdSlotsRef, JSON.parse(JSON.stringify(thirdSlots)));
+      alert("3rd place slots saved!");
+    } catch(e) {
+      alert("Save failed: "+e.message);
+    }
   }
   else if(action==="save-bracket-results"){
     const br=JSON.parse(JSON.stringify(state.bracketResults||{r32:{},r16:{},qf:{},sf:{},final:{},third:{}}));
@@ -1149,40 +1153,60 @@ function renderAdminStandings(){
 }
 
 function renderAdminBracket(){
-  const s=state;
-  let html=`<div class="notice" style="text-align:left;margin-bottom:12px">Enter bracket results round by round. Group stage auto-fills from results. Enter 3rd place qualifiers manually.</div>`;
+  var s=state;
+  var html='';
+  html+='<div class="notice" style="text-align:left;margin-bottom:12px">Select winners round by round. Group stage auto-fills from your results. 3rd place slots must be typed in manually.</div>';
 
-  html+=`<div class="section-title">3rd place qualifiers (fill after group stage)</div>`;
-  const thirdGroups=["A/B/C/D/F","C/D/F/G/H","C/E/F/H/I","E/H/I/J/K","B/E/F/I/J","A/E/H/I/J","E/F/G/I/J","D/E/I/J/L"];
-  thirdGroups.forEach(grp=>{
-    const val=thirdSlots[grp]||"";
-    html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <div style="font-size:12px;color:#7a7060;width:100px;flex-shrink:0">3rd ${grp}</div>
-      <input class="admin-input" placeholder="Team name" value="${val}" data-third-grp="${encodeURIComponent(grp)}" style="flex:1"/>
-    </div>`;
+  // 3rd place slots - keep as text input but with all 48 teams as datalist
+  var thirdGroups=["A/B/C/D/F","C/D/F/G/H","C/E/F/H/I","E/H/I/J/K","B/E/F/I/J","A/E/H/I/J","E/F/G/I/J","D/E/I/J/L"];
+
+  html+='<div class="section-title">3rd place qualifiers</div>';
+  thirdGroups.forEach(function(grp){
+    var val=thirdSlots[grp]||'';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+    html+='<div style="font-size:12px;color:var(--muted2);width:110px;flex-shrink:0">3rd '+grp+'</div>';
+    html+='<select class="admin-input" data-third-grp="'+encodeURIComponent(grp)+'" style="flex:1">';
+    html+='<option value="">— select team —</option>';
+    Object.keys(FLAGS).sort().forEach(function(t){
+      html+='<option value="'+t+'"'+(val===t?' selected':'')+'>'+t+'</option>';
+    });
+    html+='</select>';
+    html+='</div>';
   });
-  html+=`<button class="btn accent" style="margin-bottom:16px" data-action="save-third-slots">Save 3rd place slots →</button>`;
+  html+='<button class="btn accent" style="margin-bottom:20px" data-action="save-third-slots">Save 3rd place slots &#8594;</button>';
 
-  const ADMIN_BRACKET_ROUNDS=[{key:"r32",full:"Round of 32"},{key:"r16",full:"Round of 16"},{key:"qf",full:"Quarterfinals"},{key:"sf",full:"Semifinals"},{key:"final",full:"Final"},{key:"third",full:"3rd Place"}];
-  ADMIN_BRACKET_ROUNDS.forEach(({key:rnd,full})=>{
-    const matches=BRACKET_MATCHES[rnd]||[];
+  // Knockout rounds - dropdowns
+  var ADMIN_ROUNDS=[
+    {key:"r32",full:"Round of 32"},
+    {key:"r16",full:"Round of 16"},
+    {key:"qf",full:"Quarterfinals"},
+    {key:"sf",full:"Semifinals"},
+    {key:"final",full:"Final"},
+    {key:"third",full:"3rd Place"}
+  ];
+
+  ADMIN_ROUNDS.forEach(function(rnd){
+    var matches=BRACKET_MATCHES[rnd.key]||[];
     if(!matches.length)return;
-    html+=`<div class="section-title">${full}</div>`;
-    matches.forEach(match=>{
-      const home=resolveTeam(match.home,s)||getSlotLabel(match.home,s);
-      const away=resolveTeam(match.away,s)||getSlotLabel(match.away,s);
-      const winner=s.bracketResults?.[rnd]?.[match.id]||"";
-      html+=`<div class="card-sm" style="margin-bottom:8px">
-        <div style="font-size:11px;color:#b0a898;margin-bottom:6px">${match.label}: ${home} vs ${away}</div>
-        <select class="admin-select" style="width:100%" data-bracket-rnd="${rnd}" data-bracket-mid="${match.id}">
-          <option value="">— winner —</option>
-          <option value="${home}" ${winner===home?"selected":""}>${home}</option>
-          <option value="${away}" ${winner===away?"selected":""}>${away}</option>
-        </select>
-      </div>`;
+    html+='<div class="section-title">'+rnd.full+'</div>';
+    matches.forEach(function(match){
+      var home=resolveTeam(match.home,s)||getSlotLabel(match.home,s);
+      var away=resolveTeam(match.away,s)||getSlotLabel(match.away,s);
+      var winner=((s.bracketResults||{})[rnd.key]||{})[match.id]||'';
+      var homeReal=!!resolveTeam(match.home,s);
+      var awayReal=!!resolveTeam(match.away,s);
+      html+='<div class="card-sm" style="margin-bottom:8px">';
+      html+='<div style="font-size:11px;color:var(--muted);margin-bottom:8px">'+match.label+': '+(FLAGS[home]||'')+' '+home+' vs '+(FLAGS[away]||'')+' '+away+'</div>';
+      html+='<select class="admin-input" data-bracket-rnd="'+rnd.key+'" data-bracket-mid="'+match.id+'" style="width:100%">';
+      html+='<option value="">— select winner —</option>';
+      if(homeReal||home!=="TBD") html+='<option value="'+home+'"'+(winner===home?' selected':'')+'>'+home+'</option>';
+      if(awayReal||away!=="TBD") html+='<option value="'+away+'"'+(winner===away?' selected':'')+'>'+away+'</option>';
+      html+='</select>';
+      html+='</div>';
     });
   });
-  html+=`<button class="btn accent" style="margin-top:8px" data-action="save-bracket-results">Save bracket results →</button>`;
+
+  html+='<button class="btn accent" style="margin-top:8px" data-action="save-bracket-results">Save bracket results &#8594;</button>';
   return html;
 }
 
