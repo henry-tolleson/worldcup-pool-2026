@@ -224,7 +224,6 @@ const DEFAULT_STATE = {
   picks:Object.fromEntries(PLAYERS.map(p=>[p.name,{groups:{},knockout:{}}])),
   groupStandings:Object.fromEntries(GROUPS.map(g=>[g.name,Object.fromEntries(g.teams.map(t=>[t,{pts:0,gd:0}]))])),
   bracketResults:{r32:{},r16:{},qf:{},sf:{},final:{},third:{}},
-  thirdPlaceSlots:{},
 };
 
 let state = null;
@@ -458,216 +457,97 @@ function renderLeaderboard(me){
 }
 
 function renderAllPicks(me){
-  const selectedName=window._selectedPicksPlayer||PLAYERS[0].name;
-  const p=PLAYERS.find(pl=>pl.name===selectedName);
-  const playerPicks=state.picks[selectedName]||{};
-  const results=state.results;
+  // Option A: round tabs at top, all players shown for selected round
+  const selRound=window._picksRound||"group";
   const dpassed=groupDeadlinePassed();
-  let html=`<div class="player-tab-bar">
-    ${PLAYERS.map(pl=>`<button class="player-tab${selectedName===pl.name?" on":""}" style="${selectedName===pl.name?`background:${pl.accent};color:#1a1a1a`:""}" data-action="set-picks-player" data-name="${pl.name}">${pl.name}</button>`).join("")}
-  </div>`;
-  if(dpassed){
-    html+=`<div class="section-title">Group stage</div><div class="picks-grid">`;
+  const results=state.results;
+
+  // Build available rounds
+  const availRounds=[];
+  if(dpassed) availRounds.push({key:"group",label:"Groups"});
+  ROUND_KEYS.filter(r=>state.knockoutRounds[r]&&knockoutDeadlinePassed(state,r)).forEach(r=>{
+    availRounds.push({key:r,label:{r32:"R32",r16:"R16",qf:"QF",sf:"SF",final:"Final"}[r]});
+  });
+  if(!availRounds.length) return '<div class="notice">No rounds available yet.</div>';
+
+  // If selected round not available, default to first
+  const activeRound=availRounds.find(r=>r.key===selRound)||availRounds[0];
+
+  let html='<div>';
+  // Round tab bar
+  html+='<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">';
+  availRounds.forEach(r=>{
+    const on=r.key===activeRound.key;
+    html+='<button data-action="set-picks-round" data-rnd="'+r.key+'" style="padding:6px 14px;font-size:12px;font-weight:500;border-radius:20px;border:0.5px solid '+(on?"transparent":"var(--border)")+';background:'+(on?"#1a1a1a":"transparent")+';color:'+(on?"#f5f0e8":"var(--muted2)")+';cursor:pointer">'+r.label+'</button>';
+  });
+  html+='</div>';
+
+  if(activeRound.key==="group"){
+    // Show all groups, each group shows all 5 players picks
     GROUPS.forEach(g=>{
-      const pick=playerPicks.groups?.[g.name],res=results.groups[g.name];
-      const f1=pick?.first&&res&&pick.first===res.first;
-      const f2=pick?.first&&res&&(pick.first===res.first||pick.first===res.second);
-      const s1=pick?.second&&res&&pick.second===res.second;
-      const s2=pick?.second&&res&&(pick.second===res.first||pick.second===res.second);
-      html+=`<div class="pick-cell"><div class="pick-cell-name" style="color:${p.accent}">Group ${g.name}</div>
-        <div class="pick-entry ${f1?"correct":f2?"partial":""}""><span class="pos">1st</span>${pick?.first||"—"}</div>
-        <div class="pick-entry ${s1?"correct":s2?"partial":""}""><span class="pos">2nd</span>${pick?.second||"—"}</div>
-      </div>`;
+      const res=results.groups[g.name];
+      html+='<div style="margin-bottom:12px">';
+      html+='<div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Group '+g.name+'</div>';
+      html+='<div style="background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden">';
+      // Header row
+      html+='<div style="display:flex;border-bottom:1px solid var(--border);background:var(--surface2)">';
+      html+='<div style="width:28px;flex-shrink:0"></div>';
+      html+='<div style="flex:1;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:6px 0">Place</div>';
+      PLAYERS.forEach(p=>{
+        html+='<div style="width:48px;flex-shrink:0;text-align:center;padding:6px 2px"><div style="width:8px;height:8px;border-radius:50%;background:'+p.accent+';margin:0 auto 2px"></div><div style="font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.name.slice(0,3)+'</div></div>';
+      });
+      html+='</div>';
+      // 1st and 2nd rows
+      ["first","second"].forEach((pos,pi)=>{
+        html+='<div style="display:flex;align-items:center;border-bottom:0.5px solid var(--border)">';
+        html+='<div style="width:28px;flex-shrink:0;font-size:10px;color:var(--muted);text-align:center;padding:8px 0">'+(pi+1)+'</div>';
+        html+='<div style="flex:1;font-size:12px;color:var(--muted2);padding:8px 0">'+(res?('<span style="font-weight:500;color:var(--text)">'+(pos==="first"?res.first:res.second)+'</span>'):"TBD")+'</div>';
+        PLAYERS.forEach(p=>{
+          const pick=(state.picks[p.name]?.groups||{})[g.name]?.[pos]||"";
+          const correct=res&&pick&&pick===(pos==="first"?res.first:res.second);
+          const partial=res&&pick&&(pick===res.first||pick===res.second)&&!correct;
+          const isMe=p.name===me.name;
+          html+='<div style="width:48px;flex-shrink:0;text-align:center;padding:6px 2px"><div style="font-size:10px;font-weight:'+(isMe?600:400)+';color:'+(correct?"#16a34a":partial?"#d97706":pick?"var(--text)":"var(--muted)")+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+( pick?pick.slice(0,4):"—")+'</div></div>';
+        });
+        html+='</div>';
+      });
+      html+='</div></div>';
     });
-    html+="</div>";
-  }
-  ROUND_KEYS.filter(r=>state.knockoutRounds[r]&&knockoutDeadlinePassed(state,r)).forEach(rnd=>{
-    const ml=state.knockoutMatches?.[rnd]||[];
-    if(!ml.length)return;
-    const rndPicks=playerPicks.knockout?.[rnd]||{};
+  } else {
+    // Knockout round - show each match with all 5 players picks
+    const rnd=activeRound.key;
+    const matchList=state.knockoutMatches?.[rnd]||[];
     const rndResults=results.knockout?.[rnd]||{};
-    const wcTeam=rndPicks.wildcard||"";
-    html+=`<div class="section-title">${ROUND_NAMES[rnd]}</div>`;
-    ml.forEach((match,idx)=>{
-      const mid=`m${idx}`,pick=rndPicks[mid],winner=rndResults[mid];
-      const hasRes=!!winner,correct=pick&&winner&&pick.team===winner;
-      const isWc=pick&&wcTeam&&pick.team===wcTeam,dns=hasRes&&!pick;
-      html+=`<div class="card-sm" style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:12px;color:var(--muted)">${match.home} vs ${match.away}</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          ${dns?`<span class="pick-entry dns">Did not submit</span>`:`
-            <span style="font-size:13px;font-weight:500;color:${correct?"#16a34a":"var(--text)"}" class="${isWc?"rainbow":""}">${pick?.team||"—"}</span>
-            ${isWc?`<span style="font-size:11px;color:${correct?"#16a34a":"#7c3aed"}">⭐</span>`:""}`}
-        </div></div>`;
-    });
-    if(wcTeam)html+=`<div style="font-size:12px;color:var(--muted);margin-bottom:8px;padding-left:4px">Wildcard: <span class="rainbow">${wcTeam}</span></div>`;
-  });
-  return html;
-}
-
-function renderGroupStandings(){
-  const gs=state.groupStandings||{};
-  let html='<div style="padding-top:4px">';
-  GROUPS.forEach(g=>{
-    const teams=g.teams.slice().sort((a,b)=>{
-      const ga=gs[g.name]?.[a]||{pts:0,gd:0}, gb=gs[g.name]?.[b]||{pts:0,gd:0};
-      if(gb.pts!==ga.pts)return gb.pts-ga.pts;
-      return gb.gd-ga.gd;
-    });
-    html+=`<div class="card" style="padding:12px 16px;margin-bottom:8px">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;margin-bottom:10px">Group ${g.name}</div>
-      <div style="display:flex;align-items:center;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding:0 2px">
-        <span style="width:20px"></span><span style="flex:1">Team</span>
-        <span style="width:36px;text-align:center">PTS</span>
-        <span style="width:36px;text-align:center">GD</span>
-      </div>`;
-    teams.forEach((team,i)=>{
-      const d=gs[g.name]?.[team]||{pts:0,gd:0};
-      const isTop2=i<2;
-      const gdStr=d.gd>0?`+${d.gd}`:d.gd===0?"0":`${d.gd}`;
-      const gdColor=d.gd>0?"#16a34a":d.gd<0?"#dc2626":"var(--muted)";
-      html+=`<div style="display:flex;align-items:center;gap:0;padding:8px 2px;border-top:0.5px solid var(--border)">
-        <div style="font-size:12px;color:${isTop2?"var(--muted2)":"#ccc8be"};width:20px;font-weight:500">${i+1}</div>
-        <div style="flex:1;font-size:14px;font-weight:${isTop2?500:400};color:${isTop2?"var(--text)":"var(--muted2)"}">${team}</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;width:36px;text-align:center;color:${isTop2?"var(--text)":"var(--muted)"}">${d.pts}</div>
-        <div style="font-size:13px;font-weight:500;width:36px;text-align:center;color:${gdColor}">${gdStr}</div>
-      </div>`;
-    });
-    html+='</div>';
-  });
-  html+='</div>';
-  return html;
-}
-
-
-function resolveTeam(slot, s){
-  if(!slot)return null;
-  if(slot.type==="group"){
-    const res=s.results.groups[slot.g];
-    if(!res)return null;
-    return slot.pos==="1st"?res.first:res.second;
-  }
-  if(slot.type==="third"){
-    return s.thirdPlaceSlots?.[slot.groups]||null;
-  }
-  if(slot.type==="winner"){
-    const res=s.bracketResults?.[slot.rnd]?.[slot.mid];
-    return res||null;
-  }
-  if(slot.type==="loser"){
-    const rndMatches=BRACKET_MATCHES[slot.rnd]||[];
-    const match=rndMatches.find(m=>m.id===slot.mid);
-    if(!match)return null;
-    const winner=s.bracketResults?.[slot.rnd]?.[slot.mid];
-    if(!winner)return null;
-    const home=resolveTeam(match.home,s);
-    const away=resolveTeam(match.away,s);
-    return home===winner?away:home;
-  }
-  return null;
-}
-
-function getSlotLabel(slot,s){
-  if(!slot)return"TBD";
-  if(slot.type==="group") return`${slot.pos==="1st"?"1":"2"}${slot.g}`;
-  if(slot.type==="third") return`3rd ${slot.groups}`;
-  if(slot.type==="winner"){
-    const t=resolveTeam(slot,s);
-    if(t)return t;
-    const rndMatches=BRACKET_MATCHES[slot.rnd]||[];
-    const match=rndMatches.find(m=>m.id===slot.mid);
-    return match?`W ${match.label}`:"TBD";
-  }
-  if(slot.type==="loser"){
-    const t=resolveTeam(slot,s);
-    if(t)return t;
-    return"TBD";
-  }
-  return"TBD";
-}
-
-function renderMatchCard(match, rndKey, s, colWidth){
-  const home=resolveTeam(match.home,s)||getSlotLabel(match.home,s);
-  const away=resolveTeam(match.away,s)||getSlotLabel(match.away,s);
-  const winner=(s.bracketResults||{})[rndKey]?.[match.id]||"";
-  const homeIsReal=!!resolveTeam(match.home,s);
-  const awayIsReal=!!resolveTeam(match.away,s);
-  const homeWon=winner&&winner===home;
-  const awayWon=winner&&winner===away;
-  const isFinal=rndKey==="final";
-  const flag=t=>(FLAGS[t]||"");
-  const w=colWidth-8;
-  let html="";
-  html+='<div style="background:#fff;border:0.5px solid '+(isFinal?"#1a1a1a":"#e8e4dc")+';border-radius:8px;overflow:hidden;width:'+w+'px">';
-  html+='<div style="display:flex;align-items:center;padding:6px 8px;border-bottom:0.5px solid #f0ede6;background:'+(homeWon?"#f0fdf4":"#fff")+'">';
-  if(homeIsReal) html+='<span style="margin-right:5px;font-size:13px">'+flag(home)+'</span>';
-  html+='<span style="font-size:11px;font-weight:'+(homeIsReal?500:400)+';color:'+(homeIsReal?(homeWon?"#16a34a":"#1a1a1a"):"#b0a898")+';flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+home+'</span>';
-  if(winner) html+='<span style="font-size:11px;font-weight:600;color:'+(homeWon?"#16a34a":"transparent")+';margin-left:4px">✓</span>';
-  html+='</div>';
-  html+='<div style="display:flex;align-items:center;padding:6px 8px;background:'+(awayWon?"#f0fdf4":"#fff")+'">';
-  if(awayIsReal) html+='<span style="margin-right:5px;font-size:13px">'+flag(away)+'</span>';
-  html+='<span style="font-size:11px;font-weight:'+(awayIsReal?500:400)+';color:'+(awayIsReal?(awayWon?"#16a34a":"#1a1a1a"):"#b0a898")+';flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+away+'</span>';
-  if(winner) html+='<span style="font-size:11px;font-weight:600;color:'+(awayWon?"#16a34a":"transparent")+';margin-left:4px">✓</span>';
-  html+='</div></div>';
-  return html;
-}
-
-function renderBracket(){
-  var s=state;
-  var COL_WIDTH=148;
-  var R32_H=52, R32_GAP=20, SLOT=R32_H+R32_GAP;
-  var numR32=16;
-  var totalH=numR32*SLOT-R32_GAP;
-
-  var RENDER_ROUNDS=[
-    {key:"r32",full:"Round of 32"},
-    {key:"r16",full:"Round of 16"},
-    {key:"qf",full:"Quarterfinals"},
-    {key:"sf",full:"Semifinals"},
-    {key:"final",full:"Final & 3rd Place"}
-  ];
-
-  var tabsHtml="";
-  BRACKET_ROUNDS.forEach(function(r){
-    tabsHtml+='<div class="btab" data-action="bracket-scroll" data-rnd="'+r.key+'" style="padding:8px 10px;font-size:12px;font-weight:500;color:#b0a898;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap;flex-shrink:0">'+r.label+'</div>';
-  });
-
-  var html="";
-  html+='<div>';
-  html+='<div id="bracket-tabs" style="display:flex;gap:0;overflow-x:auto;border-bottom:1px solid #e8e4dc;scrollbar-width:none;">'+tabsHtml+'</div>';
-  html+='<div id="bracket-outer" style="overflow-x:auto;scrollbar-width:none;padding:12px 0 16px;">';
-  html+='<div style="display:flex;gap:0;padding:0 20px;">';
-
-  RENDER_ROUNDS.forEach(function(rnd,ri){
-    var slotSize=SLOT*Math.pow(2,ri);
-    html+='<div id="bcol-'+rnd.key+'" style="width:'+COL_WIDTH+'px;flex-shrink:0;position:relative;height:'+(totalH+60)+'px;">';
-    html+='<div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898;margin-bottom:6px;padding:0 4px">'+rnd.full+'</div>';
-
-    if(rnd.key==="final"){
-      var sfSlot=SLOT*Math.pow(2,3);
-      var finalTop=Math.round(sfSlot/2-R32_H/2)+16;
-      var thirdTop=finalTop+R32_H+50;
-      var fm=(BRACKET_MATCHES["final"]||[])[0];
-      var tm=(BRACKET_MATCHES["third"]||[])[0];
-      if(fm){
-        html+='<div style="position:absolute;top:'+finalTop+'px;left:0">'+renderMatchCard(fm,"final",s,COL_WIDTH)+'</div>';
-      }
-      if(tm){
-        html+='<div style="position:absolute;top:'+(thirdTop+16)+'px;left:0;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#b0a898">3rd Place</div>';
-        html+='<div style="position:absolute;top:'+(thirdTop+30)+'px;left:0">'+renderMatchCard(tm,"third",s,COL_WIDTH)+'</div>';
-      }
+    if(!matchList.length){
+      html+='<div class="notice">Matches not set yet.</div>';
     } else {
-      var matches=BRACKET_MATCHES[rnd.key]||[];
-      matches.forEach(function(match,mi){
-        var matchTop=Math.round(mi*slotSize + slotSize/2 - R32_H/2)+16;
-        html+='<div style="position:absolute;top:'+matchTop+'px;left:0">'+renderMatchCard(match,rnd.key,s,COL_WIDTH)+'</div>';
+      matchList.forEach((match,idx)=>{
+        const mid="m"+idx;
+        const winner=rndResults[mid]||"";
+        html+='<div style="background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px">';
+        // Match header
+        html+='<div style="padding:8px 12px;background:var(--surface2);border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between">';
+        html+='<div style="font-size:12px;font-weight:500;color:var(--text)">'+match.home+' vs '+match.away+'</div>';
+        if(winner) html+='<div style="font-size:11px;font-weight:600;color:#16a34a">'+winner+' won</div>';
+        html+='</div>';
+        // Players row
+        html+='<div style="display:flex;border-bottom:0.5px solid var(--border)">';
+        PLAYERS.forEach(p=>{
+          const pick=(state.picks[p.name]?.knockout?.[rnd]||{})[mid];
+          const isWc=(state.picks[p.name]?.knockout?.[rnd]?.wildcard)===pick?.team;
+          const correct=winner&&pick&&pick.team===winner;
+          const isMe=p.name===me.name;
+          html+='<div style="flex:1;padding:8px 4px;text-align:center;border-right:0.5px solid var(--border)">';
+          html+='<div style="width:8px;height:8px;border-radius:50%;background:'+p.accent+';margin:0 auto 4px"></div>';
+          html+='<div style="font-size:10px;font-weight:'+(isMe?600:400)+';color:'+(correct?"#16a34a":pick?"var(--text)":"var(--muted)")+'"'+(isWc?' class="rainbow"':'')+'>'+( pick?pick.team.slice(0,6):"—")+'</div>';
+          if(isWc) html+='<div style="font-size:9px;color:#7c3aed">WC</div>';
+          html+='</div>';
+        });
+        html+='</div>';
+        html+='</div>';
       });
     }
-    html+='</div>';
-  });
-
-  html+='</div></div>';
-  html+='<div style="padding:0 20px 4px;font-size:11px;color:#b0a898">&#8592; Swipe to see full bracket</div>';
+  }
   html+='</div>';
   return html;
 }
@@ -1028,8 +908,8 @@ async function handleAction(action, dataset){
       const val=inp.value.trim();
       if(val) slots[grp]=val;
     });
-    const merged={...(state.thirdPlaceSlots||{}),...slots};
-    await saveState({...state,thirdPlaceSlots:merged});
+    thirdSlots={...thirdSlots,...slots};
+    await set(thirdSlotsRef, thirdSlots);
     alert("3rd place slots saved!");
   }
   else if(action==="save-bracket-results"){
@@ -1058,6 +938,11 @@ async function handleAction(action, dataset){
       t.style.color=t.dataset.rnd===rnd?"#1a1a1a":"#b0a898";
       t.style.borderBottomColor=t.dataset.rnd===rnd?"#1a1a1a":"transparent";
     });
+  }
+  else if(action==="set-picks-round"){
+    window._picksRound=dataset.rnd;
+    document.getElementById("tab-content").innerHTML=renderTabContent();
+    attachHandlers();
   }
   else if(action==="set-picks-player"){
     window._selectedPicksPlayer=dataset.name;
@@ -1106,7 +991,7 @@ function renderAdminBracket(){
   html+=`<div class="section-title">3rd place qualifiers (fill after group stage)</div>`;
   const thirdGroups=["A/B/C/D/F","C/D/F/G/H","C/E/F/H/I","E/H/I/J/K","B/E/F/I/J","A/E/H/I/J","E/F/G/I/J","D/E/I/J/L"];
   thirdGroups.forEach(grp=>{
-    const val=s.thirdPlaceSlots?.[grp]||"";
+    const val=thirdSlots[grp]||"";
     html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <div style="font-size:12px;color:#7a7060;width:100px;flex-shrink:0">3rd ${grp}</div>
       <input class="admin-input" placeholder="Team name" value="${val}" data-third-grp="${encodeURIComponent(grp)}" style="flex:1"/>
@@ -1147,6 +1032,14 @@ document.addEventListener("click", async function(e){
 
 // Load state from Firebase
 const stateRef=ref(db,"poolState");
+const thirdSlotsRef=ref(db,"thirdSlots");
+let thirdSlots={};
+// Separate persistent listener for 3rd place slots - never gets overwritten
+onValue(thirdSlotsRef, snapshot=>{
+  const data=snapshot.val();
+  if(data) thirdSlots=data;
+});
+
 let initialLoad = true;
 onValue(stateRef,snapshot=>{
   const data=snapshot.val();
@@ -1157,7 +1050,6 @@ onValue(stateRef,snapshot=>{
     if(!data.overrides)data.overrides={};
     if(!data.bracketResults)data.bracketResults={r32:{},r16:{},qf:{},sf:{},final:{},third:{}};
     ["r32","r16","qf","sf","final","third"].forEach(r=>{if(!data.bracketResults[r])data.bracketResults[r]={};});
-    if(!data.thirdPlaceSlots)data.thirdPlaceSlots={};
     if(!data.groupStandings){data.groupStandings=Object.fromEntries(GROUPS.map(g=>[g.name,Object.fromEntries(g.teams.map(t=>[t,{pts:0,gd:0}]))]));}
     state=data;
   } else {
