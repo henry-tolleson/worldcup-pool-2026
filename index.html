@@ -274,11 +274,14 @@ function calcScore(name,s){
   ROUND_KEYS.forEach(rnd=>{
     const rr=resKnockout[rnd]||{};
     const rp=knockout[rnd]||{};
+    const wcTeam=rp.wildcard||"";
     Object.keys(rr).forEach(mid=>{
+      if(mid==="wildcard")return;
       const winner=rr[mid],pick=rp[mid];
       if(!pick||!winner||pick.team!==winner)return;
       const pts=POINT_RULES[rnd];
-      sc+=pick.isWildcard?(pts.wildcard||pts.correct):pts.correct;
+      const isWc=wcTeam&&pick.team===wcTeam;
+      sc+=isWc?(pts.wildcard||pts.correct):pts.correct;
     });
   });
   return sc;
