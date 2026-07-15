@@ -287,6 +287,33 @@ function calcScore(name,s){
   return sc;
 }
 
+function calcCorrectPicks(name,s){
+  let correct=0;
+  const picks=s.picks[name]||{};
+  const groups=picks.groups||{};
+  const knockout=picks.knockout||{};
+  const resGroups=(s.results&&s.results.groups)||{};
+  const resKnockout=(s.results&&s.results.knockout)||{};
+  // Group stage: count correct qualifiers (regardless of position)
+  GROUPS.forEach(g=>{
+    const res=resGroups[g.name],pick=groups[g.name];
+    if(!res||!pick)return;
+    if(pick.first&&(pick.first===res.first||pick.first===res.second))correct++;
+    if(pick.second&&(pick.second===res.first||pick.second===res.second))correct++;
+  });
+  // Knockout rounds: count correct winner picks
+  ROUND_KEYS.forEach(rnd=>{
+    const rr=resKnockout[rnd]||{};
+    const rp=knockout[rnd]||{};
+    Object.keys(rr).forEach(mid=>{
+      if(mid==="wildcard")return;
+      const winner=rr[mid],pick=rp[mid];
+      if(pick&&winner&&pick.team===winner)correct++;
+    });
+  });
+  return correct;
+}
+
 function calcBreakdown(name,s){
   const bd={group:0,r32:0,r16:0,qf:0,sf:0,final:0};
   const picks=s.picks[name]||{};
@@ -458,7 +485,7 @@ function renderPicksTab(p){
 }
 
 function renderLeaderboard(me){
-  const scores=PLAYERS.map(p=>({...p,score:calcScore(p.name,state)})).sort((a,b)=>b.score-a.score);
+  const scores=PLAYERS.map(p=>({...p,score:calcScore(p.name,state),correct:calcCorrectPicks(p.name,state)})).sort((a,b)=>b.score-a.score||b.correct-a.correct);
   const activeRnd=ROUND_KEYS.filter(r=>state.knockoutRounds[r]).slice(-1)[0];
   const dpassed=groupDeadlinePassed();
   const bandVal=activeRnd?ROUND_NAMES[activeRnd]:(dpassed?"Group stage complete":"Group stage");
