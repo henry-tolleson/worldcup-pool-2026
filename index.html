@@ -1357,6 +1357,10 @@ onValue(stateRef,snapshot=>{
     PLAYERS.forEach(p=>{if(!data.picks[p.name])data.picks[p.name]={groups:{},knockout:{}};});
     if(!data.results)data.results={groups:{},knockout:{}};
     if(!data.overrides)data.overrides={};
+    // Clean up old "third" round from Firebase if present
+    if(data.knockoutRounds&&data.knockoutRounds.third!==undefined)delete data.knockoutRounds.third;
+    if(data.knockoutMatches&&data.knockoutMatches.third)delete data.knockoutMatches.third;
+    if(data.knockoutDeadlines&&data.knockoutDeadlines.third)delete data.knockoutDeadlines.third;
     if(!data.bracketResults)data.bracketResults={r32:{},r16:{},qf:{},sf:{},final:{},third:{}};
     ["r32","r16","qf","sf","final","third"].forEach(r=>{if(!data.bracketResults[r])data.bracketResults[r]={};});
     if(!data.groupStandings){data.groupStandings=Object.fromEntries(GROUPS.map(g=>[g.name,Object.fromEntries(g.teams.map(t=>[t,{pts:0,gd:0}]))]));}
