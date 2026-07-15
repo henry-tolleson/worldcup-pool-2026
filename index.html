@@ -496,12 +496,16 @@ function renderLeaderboard(me){
     const hasAny=rounds.some(r=>bd[r.key]>0);
     const medals=["🥇","🥈","🥉"];
     const isMe=p.name===me.name;
+    const isTied=scores.filter(x=>x.score===p.score).length>1;
     html+=`<div class="lb-row">
       <div style="display:flex;align-items:center;gap:12px">
         <div class="lb-rank">${medals[i]||i+1}</div>
         <div class="dot" style="background:${p.accent}"></div>
         <div class="lb-name" style="font-weight:${isMe?500:400}">${p.name}</div>
-        <div class="lb-pts">${p.score}</div>
+        <div style="text-align:right">
+          <div class="lb-pts">${p.score}</div>
+          ${isTied?`<div style="font-size:10px;color:var(--muted);white-space:nowrap">${p.correct} games correct</div>`:""}
+        </div>
       </div>
       ${hasAny?`<div style="display:flex;gap:10px;padding-left:46px;flex-wrap:wrap">${rounds.filter(r=>bd[r.key]>0).map(r=>`<div style="text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:1px;color:#b0a898;text-transform:uppercase;margin-bottom:2px">${r.label}</div><div style="font-size:13px;font-weight:500">${bd[r.key]}</div></div>`).join("")}</div>`:""}
     </div>`;
