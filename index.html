@@ -141,10 +141,10 @@ const GROUPS = [
   {name:"K",teams:["Portugal","Congo DR","Uzbekistan","Colombia"]},
   {name:"L",teams:["England","Croatia","Ghana","Panama"]},
 ];
-const ROUND_NAMES = {r32:"Round of 32",r16:"Round of 16",qf:"Quarterfinals",sf:"Semifinals",final:"Final",third:"3rd Place Game"};
+const ROUND_NAMES = {r32:"Round of 32",r16:"Round of 16",qf:"Quarterfinals",sf:"Semifinals",final:"Final & 3rd Place"};
 const ROUND_KEYS = ["r32","r16","qf","sf","final"];
 const WILDCARD_ROUNDS = ["r32","r16","qf"];
-const POINT_RULES = {r32:{correct:3,wildcard:6},r16:{correct:5,wildcard:10},qf:{correct:8,wildcard:16},sf:{correct:12},final:{correct:18},third:{correct:12}};
+const POINT_RULES = {r32:{correct:3,wildcard:6},r16:{correct:5,wildcard:10},qf:{correct:8,wildcard:16},sf:{correct:12},final:{m0:18,m1:12,correct:18}};
 
 const FLAGS = {
   "Mexico":"🇲🇽","South Africa":"🇿🇦","South Korea":"🇰🇷","Czechia":"🇨🇿",
@@ -311,8 +311,9 @@ function calcBreakdown(name,s){
       const winner=rr[mid],pick=rp[mid];
       if(!pick||!winner||pick.team!==winner)return;
       const pts=POINT_RULES[rnd];
+      const correct=rnd==="final"?(pts[mid]||pts.correct):pts.correct;
       const isWc=wcTeam&&pick.team===wcTeam;
-      bd[rnd]+=(isWc?(pts.wildcard||pts.correct):pts.correct);
+      bd[rnd]+=(isWc?(correct*2):correct);
     });
   });
   return bd;
@@ -771,8 +772,8 @@ function renderKoPicks(){
   var isFinalRnd=rnd==="final";
   // For final round, show both final and 3rd place matches
   var matchList=state.knockoutMatches?.[rnd]||[];
-  var thirdMatchList=isFinalRnd?(state.knockoutMatches?.["third"]||[]):[];
-  var allMatches=matchList.concat(thirdMatchList.map(function(m,i){return{...m,_isThird:true,_idx:i};}));
+  var thirdMatchList=[];
+
 
   var ov=!!(state.overrides?.[currentPlayer.name]?.[rnd]);
   var html="";
@@ -781,7 +782,7 @@ function renderKoPicks(){
   html+='<h2 style="margin-bottom:4px">'+(isFinalRnd?"Final & 3rd Place":ROUND_NAMES[rnd])+'</h2>';
   html+='<div style="margin-bottom:14px">';
   html+='<div class="pts-rule">Final correct pick: <span>+'+POINT_RULES["final"].correct+' pts</span></div>';
-  if(isFinalRnd) html+='<div class="pts-rule">3rd place correct pick: <span>+'+POINT_RULES["third"].correct+' pts</span></div>';
+  if(isFinalRnd) html+='<div class="pts-rule">3rd place correct pick: <span>+12 pts</span></div>';
   html+='</div>';
   if(ov&&!isKnockoutOpen(state,rnd)) html+='<div class="override-banner">&#9889; Admin override &#8212; submit now</div>';
 
@@ -789,13 +790,14 @@ function renderKoPicks(){
     html+='<div class="notice">Matches haven't been set yet.</div>';
   }
 
-  // Final matches
+  // Show all final matches - m0=championship, m1=3rd place
   if(matchList.length){
-    if(isFinalRnd) html+='<div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Championship</div>';
+    var matchLabels=["Championship (18 pts)","3rd Place Game (12 pts)"];
     matchList.forEach(function(match,idx){
       var mid="m"+idx;
       var cur=koDraft[mid]||{};
       var line=(state.knockoutLines?.[rnd]||{})[mid]||"";
+      html+='<div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">'+(isFinalRnd?matchLabels[idx]||"Match "+(idx+1):"")+'</div>';
       html+='<div class="match-card">';
       html+='<div class="teams-row"><span class="team">'+match.home+'</span><span class="vs">vs</span><span class="team right">'+match.away+'</span></div>';
       if(line) html+='<div class="line-chip">Line: '+line+'</div>';
@@ -806,23 +808,8 @@ function renderKoPicks(){
     });
   }
 
-  // 3rd place matches (shown under final)
-  if(isFinalRnd&&thirdMatchList.length){
-    html+='<div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:12px 0 8px">3rd Place Game</div>';
-    thirdMatchList.forEach(function(match,idx){
-      var mid="third_m"+idx;
-      var cur=koDraft[mid]||{};
-      html+='<div class="match-card">';
-      html+='<div class="teams-row"><span class="team">'+match.home+'</span><span class="vs">vs</span><span class="team right">'+match.away+'</span></div>';
-      html+='<div class="pick-btns">';
-      html+='<button class="'+(cur.team===match.home?"sel":"")+'" data-action="ko-pick" data-mid="'+mid+'" data-team="'+match.home+'">'+match.home+'</button>';
-      html+='<button class="'+(cur.team===match.away?"sel":"")+'" data-action="ko-pick" data-mid="'+mid+'" data-team="'+match.away+'">'+match.away+'</button>';
-      html+='</div></div>';
-    });
-  }
-
   html+='<div id="ko-save-msg" class="ok" style="display:none;margin-top:8px">&#10003; Picks saved!</div>';
-  if(matchList.length||thirdMatchList.length){
+  if(matchList.length){
     html+='<button class="btn accent" style="margin-top:8px" data-action="save-ko-picks">Save picks &#8594;</button>';
   }
   html+='</div>';
@@ -971,7 +958,7 @@ function renderAdminResults(){
 }
 
 function renderAdminRounds(){
-  const NUM={r32:16,r16:8,qf:4,sf:2,final:1};
+  const NUM={r32:16,r16:8,qf:4,sf:2,final:2};
   let html=`<div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div><h3>Group stage</h3><div class="sub" style="margin-top:2px">Deadline: Jun 10, 11:59 PM PT (auto)</div></div>
@@ -1089,11 +1076,7 @@ async function handleAction(action, dataset){
     koRound=dataset.rnd;
     const ex=state.picks[currentPlayer.name]?.knockout?.[koRound]||{};
     koDraft={};Object.keys(ex).forEach(k=>{if(k!=="wildcard")koDraft[k]=ex[k];});
-    // If opening final, also load third picks with "third_" prefix
-    if(koRound==="final"){
-      const thirdEx=state.picks[currentPlayer.name]?.knockout?.["third"]||{};
-      Object.keys(thirdEx).forEach(k=>{koDraft["third_"+k]=thirdEx[k];});
-    }
+
     koWildcard=ex.wildcard||"";view="ko-picks";render();
   }
   else if(action==="ko-pick"){
@@ -1119,21 +1102,13 @@ async function handleAction(action, dataset){
   }
   else if(action==="save-ko-picks"){
     const ml=state.knockoutMatches?.[koRound]||[];
-    const thirdMl=koRound==="final"?(state.knockoutMatches?.["third"]||[]):[];
-    if(!ml.length&&!thirdMl.length){alert("No matches set yet.");return;}
+    
+    if(!ml.length){alert("No matches set yet.");return;}
     for(let i=0;i<ml.length;i++){if(!koDraft[`m${i}`]?.team){alert("Pick a winner for every match.");return;}}
-    if(koRound==="final"){
-      for(let i=0;i<thirdMl.length;i++){if(!koDraft[`third_m${i}`]?.team){alert("Please also pick a winner for the 3rd place game.");return;}}
-    }
+
     const ov={...(state.overrides||{})};if(ov[currentPlayer.name])delete ov[currentPlayer.name][koRound];
     const rd={...koDraft};
-    // Split out third picks into their own round
-    const thirdRd={};
-    if(koRound==="final"){
-      Object.keys(rd).forEach(k=>{if(k.startsWith("third_")){thirdRd[k.replace("third_","")]=rd[k];delete rd[k];}});
-    }
     const newKo={...(state.picks[currentPlayer.name]?.knockout||{}),[koRound]:rd};
-    if(koRound==="final"&&Object.keys(thirdRd).length) newKo["third"]=thirdRd;
     const ns={...state,overrides:ov,picks:{...state.picks,[currentPlayer.name]:{...state.picks[currentPlayer.name],knockout:newKo}}};
     await saveState(ns);
     const m=document.getElementById("ko-save-msg");if(m){m.style.display="block";setTimeout(()=>m.style.display="none",2000);}
