@@ -141,10 +141,10 @@ const GROUPS = [
   {name:"K",teams:["Portugal","Congo DR","Uzbekistan","Colombia"]},
   {name:"L",teams:["England","Croatia","Ghana","Panama"]},
 ];
-const ROUND_NAMES = {r32:"Round of 32",r16:"Round of 16",qf:"Quarterfinals",sf:"Semifinals",final:"Final"};
-const ROUND_KEYS = ["r32","r16","qf","sf","final"];
+const ROUND_NAMES = {r32:"Round of 32",r16:"Round of 16",qf:"Quarterfinals",sf:"Semifinals",final:"Final",third:"3rd Place Game"};
+const ROUND_KEYS = ["r32","r16","qf","sf","final","third"];
 const WILDCARD_ROUNDS = ["r32","r16","qf"];
-const POINT_RULES = {r32:{correct:3,wildcard:6},r16:{correct:5,wildcard:10},qf:{correct:8,wildcard:16},sf:{correct:12},final:{correct:18}};
+const POINT_RULES = {r32:{correct:3,wildcard:6},r16:{correct:5,wildcard:10},qf:{correct:8,wildcard:16},sf:{correct:12},final:{correct:18},third:{correct:12}};
 
 const FLAGS = {
   "Mexico":"🇲🇽","South Africa":"🇿🇦","South Korea":"🇰🇷","Czechia":"🇨🇿",
@@ -232,7 +232,7 @@ const FIFA_CODES={
 };
 const DEFAULT_STATE = {
   groupStageOpen:true, overrides:{},
-  knockoutRounds:{r32:false,r16:false,qf:false,sf:false,final:false},
+  knockoutRounds:{r32:false,r16:false,qf:false,sf:false,final:false,third:false},
   knockoutDeadlines:{}, knockoutMatches:{}, knockoutLines:{},
   results:{groups:{},knockout:{}},
   picks:Object.fromEntries(PLAYERS.map(p=>[p.name,{groups:{},knockout:{}}])),
@@ -288,7 +288,7 @@ function calcScore(name,s){
 }
 
 function calcBreakdown(name,s){
-  const bd={group:0,r32:0,r16:0,qf:0,sf:0,final:0};
+  const bd={group:0,r32:0,r16:0,qf:0,sf:0,final:0,third:0};
   const picks=s.picks[name]||{};
   const groups=picks.groups||{};
   const knockout=picks.knockout||{};
@@ -461,7 +461,7 @@ function renderLeaderboard(me){
   const activeRnd=ROUND_KEYS.filter(r=>state.knockoutRounds[r]).slice(-1)[0];
   const dpassed=groupDeadlinePassed();
   const bandVal=activeRnd?ROUND_NAMES[activeRnd]:(dpassed?"Group stage complete":"Group stage");
-  const rounds=[{key:"group",label:"GRP"},...ROUND_KEYS.filter(r=>state.knockoutRounds[r]).map(r=>({key:r,label:{r32:"R32",r16:"R16",qf:"QF",sf:"SF",final:"FIN"}[r]}))];
+  const rounds=[{key:"group",label:"GRP"},...ROUND_KEYS.filter(r=>state.knockoutRounds[r]).map(r=>({key:r,label:{r32:"R32",r16:"R16",qf:"QF",sf:"SF",final:"FIN",third:"3RD"}[r]}))];
   let html=`<div class="band"><div class="band-label">Current stage</div><div class="band-value">${bandVal}</div></div><div class="card" style="margin-top:8px">`;
   scores.forEach((p,i)=>{
     const bd=calcBreakdown(p.name,state);
@@ -1258,7 +1258,16 @@ onValue(thirdSlotsRef, snapshot=>{
 });
 
 let initialLoad = true;
+// Set a timeout - if state hasn't loaded in 8 seconds, show error
+const loadTimeout=setTimeout(function(){
+  if(!state){
+    const app=document.getElementById("app");
+    if(app)app.innerHTML='<div style="padding:32px 20px;font-family:sans-serif;text-align:center"><p style="color:#dc2626;font-size:14px;margin-bottom:12px">Could not connect to the database. This may be a Firebase permissions issue.</p><p style="font-size:12px;color:#888">Please contact Henry to fix the database rules.</p></div>';
+  }
+},8000);
+
 onValue(stateRef,snapshot=>{
+  clearTimeout(loadTimeout);
   const data=snapshot.val();
   if(data){
     if(!data.picks)data.picks={};
