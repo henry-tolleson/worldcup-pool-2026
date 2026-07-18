@@ -1086,7 +1086,7 @@ async function handleAction(action, dataset){
     alert(`Deadline saved: ${fmt(val)}`);
   }
   else if(action==="save-matches"){
-    const rnd=dataset.rnd,NUM={r32:16,r16:8,qf:4,sf:2,final:1};
+    const rnd=dataset.rnd,NUM={r32:16,r16:8,qf:4,sf:2,final:2};
     const matches=[],lines={};
     for(let i=0;i<NUM[rnd];i++){
       const home=document.getElementById(`home-${rnd}-${i}`)?.value.trim()||"";
